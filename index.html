@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>26 — 서울 1박 2일</title>
+<meta property="og:title" content="26">
+<meta property="og:description" content="2학년 6반 20주년, 서울 1박 2일 의견 모으기">
+<!-- <meta property="og:image" content="https://배포주소/og.png"> 카톡 썸네일용, 1200x630 -->
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --bg:#F5F5F7;
+  --card:#FFFFFF;
+  --label:#1D1D1F;
+  --secondary:#6E6E73;
+  --sep:rgba(60,60,67,.16);
+  --fill:#E8E8ED;
+  --seg-on:#FFFFFF;
+  --accent:#0071E3;
+  --green:#34C759;
+  --red:#FF3B30;
+  --font:-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Apple SD Gothic Neo", "Pretendard", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    color-scheme: dark;
+    --bg:#000000;
+    --card:#1C1C1E;
+    --label:#F5F5F7;
+    --secondary:#98989D;
+    --sep:rgba(84,84,88,.55);
+    --fill:#2C2C2E;
+    --seg-on:#636366;
+    --accent:#0A84FF;
+    --green:#30D158;
+    --red:#FF453A;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:var(--font);color:var(--label);background:var(--bg);
+  -webkit-font-smoothing:antialiased;line-height:1.47;letter-spacing:-0.01em;
+}
+#app{max-width:520px;margin:0 auto;padding:20px 20px 130px;min-height:100vh}
+h1,h2,h3{margin:0;font-weight:700;letter-spacing:-0.025em}
+h2{font-size:1.75rem;line-height:1.2}
+h3{font-size:1.15rem}
+p{margin:0}
+.sub{color:var(--secondary);font-size:.97rem;margin-top:6px}
+.demo{font-size:.8rem;color:var(--secondary);text-align:center;padding:6px;margin-bottom:8px}
+
+/* 히어로 */
+.hero{padding:9vh 4px 28px}
+.hero .num{
+  font-size:clamp(8rem, 42vw, 12rem);font-weight:800;line-height:.85;letter-spacing:-0.07em;
+  animation:rise .9s cubic-bezier(.2,.8,.2,1) both;
+}
+.hero .cls{font-size:1.35rem;font-weight:600;margin-top:18px}
+.hero .what{font-size:1.35rem;font-weight:600;color:var(--secondary)}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+/* 그룹 리스트 (iOS inset grouped) */
+.group{background:var(--card);border-radius:14px;overflow:hidden;margin:18px 0}
+.group-title{font-size:.82rem;color:var(--secondary);margin:24px 16px -10px}
+.row{
+  all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:12px;
+  min-height:52px;padding:11px 16px;position:relative;cursor:default;
+}
+button.row{cursor:pointer}
+.row+.row::before{content:"";position:absolute;top:0;left:16px;right:0;height:1px;background:var(--sep)}
+.row .main{flex:1;min-width:0}
+.row .t{font-size:1.02rem}
+.row .d{font-size:.84rem;color:var(--secondary);margin-top:1px}
+.row .val{color:var(--secondary);font-size:.97rem}
+.row .check{width:20px;flex:none;color:var(--accent);font-weight:700;font-size:1.05rem;text-align:center;opacity:0}
+.row[aria-pressed="true"] .check{opacity:1}
+button.row:active{background:var(--fill)}
+
+/* 입력 */
+.field{background:var(--card);border-radius:14px;margin:18px 0;padding:4px 16px}
+.field input,.field textarea{
+  width:100%;border:none;outline:none;background:transparent;color:var(--label);
+  font:inherit;font-size:1.05rem;padding:12px 0;resize:none;
+}
+.field textarea{min-height:88px}
+.field+.field{margin-top:10px}
+.label{font-size:.82rem;color:var(--secondary);margin:24px 16px 0}
+
+/* 캐릭터 */
+.chars{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:12px 0}
+.char{
+  all:unset;cursor:pointer;aspect-ratio:1;border-radius:50%;background:var(--card);
+  display:grid;place-items:center;font-size:1.6rem;box-shadow:inset 0 0 0 2px transparent;transition:box-shadow .15s
+}
+.char[aria-pressed="true"]{box-shadow:inset 0 0 0 2.5px var(--accent)}
+
+/* 세그먼트 */
+.seg{display:flex;background:var(--fill);border-radius:9px;padding:2px;flex:none}
+.seg button{
+  all:unset;cursor:pointer;flex:1;text-align:center;padding:6px 10px;border-radius:7px;font-size:.86rem;font-weight:500;
+  transition:background .15s, box-shadow .15s
+}
+.seg button[aria-pressed="true"]{background:var(--seg-on);box-shadow:0 1px 3px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04)}
+.seg button[aria-pressed="true"][data-val="like"]{color:var(--green);font-weight:600}
+.seg button[aria-pressed="true"][data-val="no"]{color:var(--red);font-weight:600}
+.seg.wide{width:100%;margin-top:8px}
+.seg.wide button{font-size:1.25rem;padding:5px 0}
+.rate{display:block;padding:12px 16px}
+.rate .t{font-size:1rem}
+.scale{display:flex;justify-content:space-between;font-size:.76rem;color:var(--secondary);margin:6px 18px 0}
+
+/* 진행 */
+.progress{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0 14px;margin:-20px 0 10px}
+.progress .bar{height:4px;border-radius:2px;background:var(--fill);overflow:hidden}
+.progress .bar i{display:block;height:100%;background:var(--accent);transition:width .35s cubic-bezier(.2,.8,.2,1)}
+.progress .cnt{font-size:.8rem;color:var(--secondary);margin-top:8px}
+
+/* 하단 */
+.nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:10;
+  padding:12px 20px calc(14px + env(safe-area-inset-bottom));
+  background:color-mix(in srgb, var(--bg) 82%, transparent);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);
+}
+.nav-in{max-width:520px;margin:0 auto;display:flex;gap:10px;align-items:center}
+.btn{all:unset;cursor:pointer;text-align:center;font-weight:600;font-size:1.02rem;border-radius:12px;padding:15px 18px}
+.btn.primary{flex:1;background:var(--accent);color:#fff}
+.btn.primary[disabled]{opacity:.35;cursor:not-allowed}
+.btn.text{color:var(--accent);padding:15px 8px}
+.btn:focus-visible,.row:focus-visible,.char:focus-visible,.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hint{font-size:.85rem;color:var(--red);min-height:1.2em;margin:8px 16px 0}
+
+/* 완료 */
+.done{display:grid;place-items:center;text-align:center;min-height:60vh;gap:18px}
+.done svg{width:96px;height:96px}
+.done circle{stroke:var(--accent);stroke-width:4;fill:none;stroke-dasharray:283;stroke-dashoffset:283;animation:draw .6s ease-out forwards}
+.done path{stroke:var(--accent);stroke-width:5;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:60;stroke-dashoffset:60;animation:draw .35s .5s ease-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+/* 현황 */
+.count{font-size:4.5rem;font-weight:800;letter-spacing:-0.05em;line-height:1;margin-top:20px}
+.count span{color:var(--secondary);font-weight:600}
+.avatars{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 10px;margin:28px 0 8px}
+.av{text-align:center}
+.av .c{width:64px;height:64px;margin:0 auto;border-radius:50%;background:var(--card);display:grid;place-items:center;font-size:1.9rem}
+.av .n{font-size:.88rem;margin-top:6px;font-weight:500;word-break:keep-all}
+.av.empty .c{background:transparent;border:1.5px dashed var(--sep);color:var(--secondary);font-size:1.1rem}
+.av.empty .n{color:var(--secondary)}
+
+/* 결과 */
+.result-top{padding:5vh 0 6px}
+.result-top .k{font-size:.85rem;color:var(--secondary);font-weight:600}
+.card{background:var(--card);border-radius:18px;padding:18px;margin:14px 0}
+.area{padding:8px 0}
+.area .top{display:flex;justify-content:space-between;font-weight:600}
+.area .meter{height:6px;border-radius:3px;background:var(--fill);overflow:hidden;margin:6px 0}
+.area .meter i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.area:first-child .meter i{background:var(--green)}
+.area .why{font-size:.85rem;color:var(--secondary)}
+.plan .where{font-size:.88rem;color:var(--secondary);margin-top:4px}
+.plan .day{font-size:.8rem;font-weight:600;color:var(--secondary);margin:16px 0 4px}
+.plan ul,.card ul{margin:0;padding-left:18px}
+.plan li,.card li{margin:4px 0;font-size:.95rem}
+.tag{display:inline-block;font-size:.8rem;font-weight:600;background:var(--fill);border-radius:6px;padding:2px 8px;margin:10px 6px 0 0}
+.sealed{text-align:center;padding:16vh 0 0}
+.sealed .i{font-size:3rem}
+
+@media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}.done circle,.done path{stroke-dashoffset:0}}
+</style>
+</head>
+<body>
+<main id="app" aria-live="polite"></main>
+<nav class="nav" id="nav" hidden><div class="nav-in" id="navIn"></div></nav>
+
+<script>
+/* ================= 설정 ================= */
+const CONFIG = {
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyWlEo1vzPmcMA17bV-f7WhxcFOHCBRNJgkDH1pNEwtMhxGGF0RktXtww1EkcfXN2iM/exec',          // Apps Script 웹앱 URL. 비우면 미리보기 모드
+  MEMBERS: 6,
+  DEADLINE: '10월 25일'
+};
+
+/* ================= 문항 ================= */
+const CHARS = ['🐻','🐰','🦊','🐸','🐱','🐶','🐼','🐧','🐹','🐯','🐥','🦦'];
+const STAY_PURPOSE = [
+  {v:'sleep', t:'잠만 잔다', d:'위치랑 가격 우선'},
+  {v:'rest',  t:'깔끔하게 쉬기', d:'좋은 침구, 깨끗한 욕실'},
+  {v:'party', t:'숙소에서 같이 놀기', d:'밤새 먹고 떠들기'},
+  {v:'vibe',  t:'숙소 자체가 목적', d:'한옥, 감성 스테이'}
+];
+const STAY_TYPES = [
+  {v:'hotel', t:'호텔'},
+  {v:'airbnb', t:'에어비앤비 통째'},
+  {v:'hanok', t:'한옥스테이'},
+  {v:'partyroom', t:'파티룸형 숙소'},
+  {v:'guesthouse', t:'게스트하우스'}
+];
+const BUDGET = [
+  {v:'~5만', t:'5만원 이하'},
+  {v:'5~10만', t:'5만 – 10만원'},
+  {v:'10~15만', t:'10만 – 15만원'},
+  {v:'15만~', t:'15만원 이상'},
+  {v:'상관없음', t:'맞춰 갈게'}
+];
+const ACTIVITIES = [
+  {v:'food', t:'맛집, 노포'},
+  {v:'night', t:'술집, 루프탑'},
+  {v:'cafe', t:'카페, 디저트'},
+  {v:'walk', t:'골목 산책'},
+  {v:'culture', t:'고궁, 전시'},
+  {v:'shop', t:'소품샵, 쇼핑'},
+  {v:'photo', t:'단체사진, 스냅'},
+  {v:'stayplay', t:'숙소에서 같이 놀기'}
+];
+const FACES = ['😑','🙂','😊','😆','🤩'];
+const AREAS = [
+  {v:'해방촌', t:'해방촌', d:'언덕, 루프탑, 야경'},
+  {v:'이태원', t:'이태원', d:'다국적 음식, 바'},
+  {v:'종로', t:'종로', d:'익선동 골목, 노포, 고궁'},
+  {v:'서촌', t:'서촌', d:'한옥 골목, 시장, 조용한 카페'},
+  {v:'북촌', t:'북촌', d:'한옥마을, 삼청동'},
+  {v:'상관없음', t:'다 좋아', d:''}
+];
+const PACE = [
+  {v:'빡빡', t:'꽉 채우기', d:'갈 수 있는 데 다'},
+  {v:'적당', t:'적당히', d:'굵직한 거 두세 개'},
+  {v:'여유', t:'여유롭게', d:'수다가 메인'}
+];
+const STAMINA = [
+  {v:'강', t:'많이 걸어도 OK'},
+  {v:'중', t:'적당히'},
+  {v:'약', t:'택시 위주'}
+];
+
+/* ================= 상태 ================= */
+const blank = () => ({
+  nickname:'', character:'',
+  stayPurpose:'', stayTypes:Object.fromEntries(STAY_TYPES.map(s=>[s.v,'ok'])),
+  budget:'', activities:{}, areas:[], pace:'', stamina:'',
+  mustDo:'', dislike:''
+});
+let A = blank();
+let view = 'intro';   // intro | form | done | roll | result
+let step = 0;
+const demo = !CONFIG.SCRIPT_URL;
+const demoStore = [{nickname:'땡칠', character:'🐶'}, {nickname:'뭉치', character:'🐼'}];
+
+/* ================= 스텝 ================= */
+const STEPS = [
+  {
+    render: () => `
+      <h2>누구야</h2>
+      <p class="sub">같은 닉네임으로 다시 내면 수정돼요</p>
+      <div class="field"><input id="nick" type="text" maxlength="12" autocomplete="off" value="${esc(A.nickname)}" placeholder="닉네임"></div>
+      <div class="chars">${CHARS.map(c=>`<button class="char" data-act="char" data-val="${c}" aria-pressed="${A.character===c}" aria-label="${c}">${c}</button>`).join('')}</div>`,
+    ok: () => A.nickname.trim() && A.character,
+    why: '닉네임과 캐릭터를 골라주세요'
+  },
+  {
+    render: () => `<h2>숙소는 나한테</h2><p class="sub">하나만</p>${rows(STAY_PURPOSE,'stayPurpose',false)}`,
+    ok: () => !!A.stayPurpose, why: '하나 골라주세요'
+  },
+  {
+    render: () => `
+      <h2>숙소 형태</h2><p class="sub">싫어는 진짜 싫을 때만</p>
+      <div class="group">${STAY_TYPES.map(s=>`
+        <div class="row"><div class="main"><div class="t">${s.t}</div></div>
+          <div class="seg" role="group" aria-label="${s.t}">
+            ${[['like','좋아'],['ok','무난'],['no','싫어']].map(([v,l])=>
+              `<button data-act="tri" data-key="${s.v}" data-val="${v}" aria-pressed="${A.stayTypes[s.v]===v}">${l}</button>`).join('')}
+          </div></div>`).join('')}
+      </div>`,
+    ok: () => true
+  },
+  {
+    render: () => `<h2>1인 1박 숙소비</h2><p class="sub">결과엔 분포로만 쓰여요</p>${rows(BUDGET,'budget',false)}`,
+    ok: () => !!A.budget, why: '하나 골라주세요'
+  },
+  {
+    render: () => {
+      const left = ACTIVITIES.filter(a=>!A.activities[a.v]).length;
+      return `
+      <h2>얼마나 끌려?</h2><p class="sub" id="left">${left ? `${left}개 남음` : '완료'}</p>
+      <div class="group">${ACTIVITIES.map(a=>`
+        <div class="row rate"><div class="t">${a.t}</div>
+          <div class="seg wide" role="group" aria-label="${a.t}">
+            ${FACES.map((f,i)=>`<button data-act="rate" data-key="${a.v}" data-val="${i+1}" aria-pressed="${A.activities[a.v]===i+1}" aria-label="${i+1}점">${f}</button>`).join('')}
+          </div></div>`).join('')}
+      </div>
+      <div class="scale"><span>별로</span><span>완전 좋아</span></div>`;
+    },
+    ok: () => ACTIVITIES.every(a=>A.activities[a.v]), why: '전부 하나씩 골라주세요'
+  },
+  {
+    render: () => `<h2>끌리는 동네</h2><p class="sub">여러 개 가능</p>${rows(AREAS,'areas',true)}`,
+    ok: () => A.areas.length > 0, why: '하나 이상 골라주세요'
+  },
+  {
+    render: () => `
+      <h2>페이스</h2>
+      <div class="group-title">여행 템포</div>${rows(PACE,'pace',false)}
+      <div class="group-title">체력</div>${rows(STAMINA,'stamina',false)}`,
+    ok: () => A.pace && A.stamina, why: '둘 다 골라주세요'
+  },
+  {
+    render: () => `
+      <h2>마지막으로</h2><p class="sub">비워도 괜찮아요</p>
+      <div class="label">이번엔 이것만은 꼭</div>
+      <div class="field"><textarea id="must" maxlength="200" placeholder="단체사진 제대로 한 장">${esc(A.mustDo)}</textarea></div>
+      <div class="label">이건 싫어</div>
+      <div class="field"><textarea id="nope" maxlength="200" placeholder="한 시간 줄 서는 집">${esc(A.dislike)}</textarea></div>`,
+    ok: () => true
+  }
+];
+
+/* ================= 렌더 ================= */
+const $app = document.getElementById('app');
+const $nav = document.getElementById('nav');
+const $navIn = document.getElementById('navIn');
+
+function render(){
+  ({intro:renderIntro, form:renderForm, done:renderDone, roll:renderRoll, result:renderResult})[view]();
+  window.scrollTo(0,0);
+}
+
+function renderIntro(){
+  $app.innerHTML = `
+    ${demo ? '<div class="demo">미리보기 모드 · 저장되지 않음</div>' : ''}
+    <section class="hero">
+      <div class="num">26</div>
+      <div class="cls">2학년 6반, 20년.</div>
+      <div class="what">서울에서 1박 2일.</div>
+    </section>
+    <div class="group">
+      <div class="row"><div class="main"><div class="t">후보</div></div><div class="val">해방촌 이태원 종로 서촌 북촌</div></div>
+      <div class="row"><div class="main"><div class="t">마감</div></div><div class="val">${esc(CONFIG.DEADLINE)}</div></div>
+      <div class="row"><div class="main"><div class="t">소요</div></div><div class="val">2분</div></div>
+    </div>
+    <p class="sub" style="margin:0 16px">답이 모이면 AI가 정리하고, 마지막은 투표로 정해요.</p>`;
+  setNav(`<button class="btn text" data-act="go-roll">현황</button>
+          <button class="btn primary" data-act="start">시작하기</button>`);
+}
+
+function renderForm(){
+  const s = STEPS[step];
+  const pct = Math.round((step+1)/STEPS.length*100);
+  $app.innerHTML = `
+    <div class="progress"><div class="bar"><i style="width:${pct}%"></i></div><div class="cnt">${step+1} / ${STEPS.length}</div></div>
+    ${s.render()}
+    <div class="hint" id="hint"></div>`;
+  const last = step === STEPS.length-1;
+  setNav(`<button class="btn text" data-act="back">이전</button>
+          <button class="btn primary" data-act="next" ${s.ok()?'':'disabled'}>${last?'제출':'다음'}</button>`);
+}
+
+function renderDone(){
+  $app.innerHTML = `<div class="done">
+    <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="45"/><path d="M30 52 l14 14 l26 -30"/></svg>
+    <div><h2>제출 완료</h2><p class="sub">${esc(A.character)} ${esc(A.nickname)}</p></div></div>`;
+  setNav(`<button class="btn primary" data-act="go-roll">현황 보기</button>`);
+}
+
+async function renderRoll(){
+  $app.innerHTML = `<p class="sub" style="padding-top:20vh;text-align:center">불러오는 중</p>`;
+  setNav('');
+  let members;
+  try { members = await api('status'); }
+  catch(e){
+    $app.innerHTML = `<h2>현황</h2><p class="hint">불러오지 못함: ${esc(e.message)}</p>`;
+    setNav(`<button class="btn primary" data-act="go-roll">다시 시도</button>`); return;
+  }
+  const n = Math.max(CONFIG.MEMBERS, members.length);
+  const avs = Array.from({length:n}, (_,i)=>{
+    const m = members[i];
+    return m ? `<div class="av"><div class="c">${esc(m.character)}</div><div class="n">${esc(m.nickname)}</div></div>`
+             : `<div class="av empty"><div class="c">?</div><div class="n">대기</div></div>`;
+  }).join('');
+  $app.innerHTML = `
+    <h2>현황</h2>
+    <div class="count">${members.length}<span>/${CONFIG.MEMBERS}</span></div>
+    <p class="sub">${members.length>=CONFIG.MEMBERS ? '다 모였어요' : `마감 ${esc(CONFIG.DEADLINE)}`}</p>
+    <div class="avatars">${avs}</div>`;
+  setNav(`<button class="btn text" data-act="edit">${A.nickname ? '수정' : '참여'}</button>
+          <button class="btn primary" data-act="go-result">결과 보기</button>`);
+}
+
+async function renderResult(){
+  $app.innerHTML = `<p class="sub" style="padding-top:20vh;text-align:center">불러오는 중</p>`;
+  setNav('');
+  let r;
+  try { r = await api('result'); }
+  catch(e){
+    $app.innerHTML = `<h2>결과</h2><p class="hint">불러오지 못함: ${esc(e.message)}</p>`;
+    setNav(`<button class="btn primary" data-act="go-roll">현황으로</button>`); return;
+  }
+  if (!r){
+    $app.innerHTML = `<div class="sealed"><div class="i">🔒</div><h2 style="margin-top:12px">아직이에요</h2><p class="sub">다 모이면 열려요</p></div>`;
+    setNav(`<button class="btn primary" data-act="go-roll">현황으로</button>`); return;
+  }
+  const areas = (r.areas||[]).slice().sort((a,b)=>b.score-a.score);
+  const pct = v => Math.max(0, Math.min(100, Number(v)||0));
+  $app.innerHTML = `
+    <div class="result-top"><div class="k">26 · 서울 1박 2일</div><h2 style="margin-top:6px">${esc(r.summary||'')}</h2></div>
+    <div class="card"><h3>동네 궁합</h3>
+      ${areas.map(a=>`<div class="area"><div class="top"><span>${esc(a.name)}</span><span>${pct(a.score)}</span></div>
+        <div class="meter"><i style="width:${pct(a.score)}%"></i></div><div class="why">${esc(a.reason)}</div></div>`).join('')}
+    </div>
+    ${(r.plans||[]).map(p=>`<div class="card plan">
+      <h3>${esc(p.title)}</h3><div class="where">${esc(p.area)} — ${esc(p.stay)}</div>
+      <div class="day">DAY 1</div><ul>${(p.day1||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+      <div class="day">DAY 2</div><ul>${(p.day2||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+      ${(p.fits||[]).map(f=>`<span class="tag">${esc(f)}</span>`).join('')}
+    </div>`).join('')}
+    ${list('다들 원하는 것', r.consensus, x=>esc(x))}
+    ${list('갈리는 부분', r.conflicts, x=>`<b>${esc(x.topic)}</b> ${esc(x.detail)}`)}
+    ${list('놓치면 안 되는 의견', r.minority, x=>`<b>${esc(x.nickname)}</b> ${esc(x.point)}`)}
+    <p class="sub" style="text-align:center;margin-top:20px">최종 결정은 투표로</p>`;
+  setNav(`<button class="btn primary" data-act="go-roll">현황으로</button>`);
+}
+
+/* ================= 헬퍼 ================= */
+function rows(items, key, multi){
+  return `<div class="group">${items.map(it=>{
+    const on = multi ? A[key].includes(it.v) : A[key]===it.v;
+    return `<button class="row" data-act="pick" data-key="${key}" data-val="${esc(it.v)}" data-multi="${multi}" aria-pressed="${on}">
+      <div class="main"><div class="t">${it.t}</div>${it.d?`<div class="d">${it.d}</div>`:''}</div><span class="check">✓</span></button>`;
+  }).join('')}</div>`;
+}
+function list(title, arr, fn){
+  if (!arr || !arr.length) return '';
+  return `<div class="card"><h3 style="margin-bottom:8px">${title}</h3><ul>${arr.map(x=>`<li>${fn(x)}</li>`).join('')}</ul></div>`;
+}
+function setNav(html){ $navIn.innerHTML = html; $nav.hidden = !html; }
+function esc(s){ return String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function refreshNext(){
+  const btn = $navIn.querySelector('[data-act="next"]');
+  if (btn) btn.disabled = !STEPS[step].ok();
+  const h = document.getElementById('hint'); if (h) h.textContent = '';
+}
+
+/* ================= API ================= */
+async function api(action, body){
+  if (demo) return demoApi(action, body);
+  if (body){
+    const res = await fetch(CONFIG.SCRIPT_URL, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'}, // preflight 회피
+      body: JSON.stringify(body)
+    });
+    const j = await res.json();
+    if (!j.ok) throw new Error(j.error||'저장 실패');
+    return true;
+  }
+  const res = await fetch(`${CONFIG.SCRIPT_URL}?action=${action}`);
+  const j = await res.json();
+  if (!j.ok) throw new Error(j.error||'불러오기 실패');
+  return action==='status' ? j.members : j.result;
+}
+async function demoApi(action, body){
+  await new Promise(r=>setTimeout(r,300));
+  if (body){
+    const i = demoStore.findIndex(m=>m.nickname===body.nickname);
+    const rec = {nickname:body.nickname, character:body.character};
+    if (i>=0) demoStore[i]=rec; else demoStore.push(rec);
+    return true;
+  }
+  return action==='status' ? demoStore : null;
+}
+
+/* ================= 이벤트 ================= */
+document.addEventListener('click', async e=>{
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act;
+
+  if (act==='start' || act==='edit'){ view='form'; step=0; render(); return; }
+  if (act==='go-roll'){ view='roll'; render(); return; }
+  if (act==='go-result'){ view='result'; render(); return; }
+  if (act==='back'){ if (step===0) view='intro'; else step--; render(); return; }
+
+  if (act==='next'){
+    const s = STEPS[step];
+    if (!s.ok()){ document.getElementById('hint').textContent = s.why||''; return; }
+    if (step < STEPS.length-1){ step++; render(); return; }
+    el.disabled = true; el.textContent = '보내는 중';
+    try{
+      await api('submit', {...A, nickname:A.nickname.trim(), submittedAt:new Date().toISOString()});
+      view='done'; render();
+    }catch(err){
+      el.disabled = false; el.textContent = '제출';
+      document.getElementById('hint').textContent = `저장 실패: ${err.message}`;
+    }
+    return;
+  }
+
+  if (act==='char'){
+    A.character = el.dataset.val;
+    el.parentElement.querySelectorAll('.char').forEach(b=>b.setAttribute('aria-pressed', b===el));
+    refreshNext(); return;
+  }
+  if (act==='pick'){
+    const key = el.dataset.key, v = el.dataset.val, multi = el.dataset.multi==='true';
+    if (multi){
+      let arr = A[key];
+      if (v==='상관없음') arr = arr.includes(v) ? [] : [v];
+      else { arr = arr.filter(x=>x!=='상관없음'); arr = arr.includes(v) ? arr.filter(x=>x!==v) : [...arr, v]; }
+      A[key] = arr;
+      el.parentElement.querySelectorAll('.row').forEach(b=>b.setAttribute('aria-pressed', arr.includes(b.dataset.val)));
+    } else {
+      A[key] = v;
+      el.parentElement.querySelectorAll('.row').forEach(b=>b.setAttribute('aria-pressed', b===el));
+    }
+    refreshNext(); return;
+  }
+  if (act==='tri' || act==='rate'){
+    if (act==='tri') A.stayTypes[el.dataset.key] = el.dataset.val;
+    else A.activities[el.dataset.key] = Number(el.dataset.val);
+    el.parentElement.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed', b===el));
+    if (act==='rate'){
+      const left = ACTIVITIES.filter(a=>!A.activities[a.v]).length;
+      document.getElementById('left').textContent = left ? `${left}개 남음` : '완료';
+      refreshNext();
+    }
+  }
+});
+
+document.addEventListener('input', e=>{
+  if (e.target.id==='nick') A.nickname = e.target.value;
+  if (e.target.id==='must') A.mustDo = e.target.value;
+  if (e.target.id==='nope') A.dislike = e.target.value;
+  refreshNext();
+});
+
+render();
+</script>
+</body>
+</html>
