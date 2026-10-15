@@ -262,10 +262,10 @@ const Q = {
   meet:     {label:'집결', type:'one', opts:['11시','12시','13시','14시']},
   lunch:    {label:'점심', type:'multi', max:2, opts:['한식','중식','일식','양식','시장 먹거리','분식']},
   day:      {label:'하고 싶은 거', type:'multi', max:3,
-             opts:['경복궁','미술관·전시','골목 산책','북촌·삼청동','수성동 계곡·인왕산','광화문·청계천',
-                   '소품샵','독립서점·책방','원데이 클래스','방탈출','오락실·인형뽑기','네컷·사진'],
+             opts:['경복궁','미술관·전시','낮맥','골목 산책','북촌·삼청동','수성동 계곡·인왕산','광화문·청계천',
+                   '소품샵','독립서점·책방'],
              desc:{'경복궁':'한복 입으면 입장 무료','미술관·전시':'국립현대미술관 서울관 등','골목 산책':'서촌 골목',
-                   '원데이 클래스':'반지, 향수, 도자기 공방','수성동 계곡·인왕산':'서촌 안쪽, 조용함'}},
+                   '수성동 계곡·인왕산':'서촌 안쪽, 조용함'}},
   cafe:     {label:'카페', type:'one', opts:['꼭 가자','한 곳만','패스']},
   free:     {label:'자유시간', type:'one', opts:['Y','N'], show:{Y:'있으면 좋겠다', N:'계속 다 같이'}},
   rest:     {label:'휴식', type:'one', opts:['숙소에서 쉬기','카페로 대체','필요 없음']},
@@ -274,12 +274,9 @@ const Q = {
   rounds:   {label:'몇 차까지', type:'one', opts:['2차','3차','4차','끝까지']},
   wake:     {label:'기상', type:'one', opts:['9시','10시','11시']},
   breakfast:{label:'아침', type:'one', opts:['해장국','브런치','편의점','패스']},
-  bye:      {label:'해산', type:'one', opts:['13시','15시','17시']},
-  never:    {label:'절대 싫다', type:'multi', max:99, groups:{
-              '음식':['한식','중식','일식','양식','분식','고기','해산물','이자카야','매운 거','느끼한 거'],
-              '활동':['경복궁','미술관·전시','수성동 계곡·인왕산','방탈출','루프탑'],
-              '기타':['웨이팅','언덕','붐비는 곳']}}
+  bye:      {label:'해산', type:'one', opts:['13시','15시','17시']}
 };
+
 const CHARS = ['🐻','🐰','🦊','🐸','🐱','🐶','🐼','🐧','🐹','🐯','🐥','🦦'];
 const ROUND_N = {'2차':2,'3차':3,'4차':4,'끝까지':5};
 
@@ -292,7 +289,7 @@ const STEPS = [
   {title:'저녁 1차', sub:'2개까지', keys:['dinner']},
   {title:'그 다음', sub:'3개까지', keys:['after','rounds']},
   {title:'둘째 날', keys:['wake','breakfast','bye']},
-  {title:'마지막으로', keys:['never'], last:true}
+  {title:'마지막으로', keys:[], last:true}
 ];
 const SUBS = {
   meet:'', cafe:'카페', free:'자유시간 1~2시간 (각자 하고 싶은 거)', rest:'저녁 전 휴식',
@@ -301,7 +298,7 @@ const SUBS = {
 
 /* ================= 상태 ================= */
 const blank = () => ({nickname:'', character:'', meet:'', lunch:[], day:[], cafe:'', free:'', rest:'',
-  dinner:[], after:[], rounds:'', wake:'', breakfast:'', bye:'', never:[], must:'', neverEtc:''});
+  dinner:[], after:[], rounds:'', wake:'', breakfast:'', bye:'', cantEat:'', must:''});
 let A = blank();
 let view = 'intro', step = 0;
 let DATA = {members:[], answers:[], match:null, places:[], likes:{}};
@@ -314,9 +311,9 @@ const demo = !CONFIG.SCRIPT_URL;
 const DEMO = {
   members:[['가람','🐻'],['귄카','🦊'],['개굴','🐸'],['ㅉㅉ','🐰'],['무야','🐼'],['벅벅숭','🐯']].map(([n,c])=>({nickname:n,character:c})),
   answers:[
-    {nickname:'가람',character:'🐻',meet:'12시',lunch:['한식','중식'],day:['경복궁','골목 산책'],cafe:'한 곳만',free:'N',rest:'숙소에서 쉬기',dinner:['고기','한식 노포'],after:['막걸리','포차','루프탑'],rounds:'끝까지',wake:'11시',breakfast:'해장국',bye:'15시',never:['디저트'],must:'4차',neverEtc:''},
-    {nickname:'개굴',character:'🐸',meet:'13시',lunch:['한식','시장 먹거리'],day:['미술관·전시','네컷·사진'],cafe:'한 곳만',free:'Y',rest:'숙소에서 쉬기',dinner:['한식 노포','해산물'],after:['막걸리','와인바'],rounds:'3차',wake:'10시',breakfast:'해장국',bye:'15시',never:['느끼한 거','양식'],must:'낮맥, 네컷',neverEtc:''},
-    {nickname:'ㅉㅉ',character:'🐰',meet:'12시',lunch:['일식','한식'],day:['경복궁','네컷·사진'],cafe:'꼭 가자',free:'Y',rest:'숙소에서 쉬기',dinner:['고기','이자카야'],after:['막걸리','숙소에서'],rounds:'3차',wake:'10시',breakfast:'브런치',bye:'15시',never:['웨이팅'],must:'파자마 게임',neverEtc:''}
+    {nickname:'가람',character:'🐻',meet:'12시',lunch:['한식','중식'],day:['경복궁','골목 산책'],cafe:'한 곳만',free:'N',rest:'숙소에서 쉬기',dinner:['고기','한식 노포'],after:['막걸리','포차','루프탑'],rounds:'끝까지',wake:'11시',breakfast:'해장국',bye:'15시',cantEat:'',must:'4차는 꼭 가자'},
+    {nickname:'개굴',character:'🐸',meet:'13시',lunch:['한식','시장 먹거리'],day:['미술관·전시','네컷·사진'],cafe:'한 곳만',free:'Y',rest:'숙소에서 쉬기',dinner:['한식 노포','해산물'],after:['막걸리','와인바'],rounds:'3차',wake:'10시',breakfast:'해장국',bye:'15시',cantEat:'회',must:'낮맥 하고 싶음'},
+    {nickname:'ㅉㅉ',character:'🐰',meet:'12시',lunch:['일식','한식'],day:['경복궁','네컷·사진'],cafe:'꼭 가자',free:'Y',rest:'숙소에서 쉬기',dinner:['고기','이자카야'],after:['막걸리','숙소에서'],rounds:'3차',wake:'10시',breakfast:'브런치',bye:'15시',cantEat:'',must:'웨이팅 긴 집은 패스'}
   ]
 };
 
@@ -360,7 +357,7 @@ function renderIntro(){
       <div class="row"><div class="main"><div class="t">마감</div></div><div class="val">${esc(CONFIG.DEADLINE)}</div></div>
       <div class="row"><div class="main"><div class="t">소요</div></div><div class="val">2분</div></div>
     </div>
-    <p class="sub" style="margin:0 16px">‘절대 싫다’로 고른 건 표가 많아도 빨갛게 표시돼요.</p>`;
+    <p class="sub" style="margin:0 16px">칸마다 표 제일 많은 걸로 일정이 짜여요.</p>`;
   setNav(`<button class="btn text" data-act="go-result">결과</button>
           <button class="btn primary" data-act="start">시작하기</button>`);
 }
@@ -370,7 +367,7 @@ function renderForm(){
   const pct = Math.round((step+1)/STEPS.length*100);
   let body = '';
   if (s.who) body = whoHTML();
-  else if (s.last) body = neverHTML();
+  else if (s.last) body = lastHTML();
   else body = s.keys.map((k,i)=>{
     const q = Q[k];
     const title = (i>0 || s.keys.length>1) && SUBS[k] ? `<div class="group-title">${SUBS[k]}${q.type==='multi'?` · ${q.max}개까지`:''}</div>` : '';
@@ -404,15 +401,12 @@ function rowsHTML(k){
   }).join('')}</div>`;
 }
 
-function neverHTML(){
-  const g = Q.never.groups;
-  return `<div class="label">절대 싫은 거 · 없으면 넘어가기</div>
-    ${Object.entries(g).map(([name, opts])=>`
-      <div class="group-title" style="margin-bottom:0">${name}</div>
-      <div class="chips">${opts.map(o=>`<button class="chip no" data-act="never" data-val="${esc(o)}" aria-pressed="${A.never.includes(o)}">${esc(o)}</button>`).join('')}</div>`).join('')}
-    <div class="field"><input id="neverEtc" type="text" maxlength="60" value="${esc(A.neverEtc)}" placeholder="기타 싫은 거"></div>
-    <div class="label">이번엔 이건 꼭 (먹기, 하기)</div>
-    <div class="field"><textarea id="must" maxlength="200" placeholder="예: 막걸리에 파전, 단체 네컷">${esc(A.must)}</textarea></div>`;
+function lastHTML(){
+  return `<p class="sub">둘 다 비워도 괜찮아요</p>
+    <div class="label">못 먹는 음식</div>
+    <div class="field"><input id="cantEat" type="text" maxlength="60" value="${esc(A.cantEat)}" placeholder="예: 회, 오이"></div>
+    <div class="label">하고 싶은 말</div>
+    <div class="field"><textarea id="must" maxlength="300" placeholder="예: 낮맥은 꼭, 웨이팅 1시간은 좀…">${esc(A.must)}</textarea></div>`;
 }
 
 function renderDone(){
@@ -449,7 +443,7 @@ async function renderResult(){
     ${matchHTML(n)}
     ${wishesHTML(ans)}
     <details class="card"><summary>칸별 득표</summary>
-      ${Object.keys(Q).filter(k=>k!=='never').map(k=>`<div class="q-sec"><h4>${Q[k].label}</h4>${barsHTML(k, ans)}</div>`).join('')}
+      ${Object.keys(Q).map(k=>`<div class="q-sec"><h4>${Q[k].label}</h4>${barsHTML(k, ans)}</div>`).join('')}
     </details>
     ${placesHTML()}
     <p class="sub" style="text-align:center;margin-top:16px">동점은 ‘또는’으로 표시. 단톡에서 택1</p>`;
@@ -601,21 +595,22 @@ function placeRow(p){
 }
 
 function wishesHTML(ans){
-  const rows = ans.filter(a=>a.must || a.neverEtc || (a.never||[]).length).map(a=>{
+  const rows = ans.map(a=>{
+    const cant = a.cantEat || [].concat(a.never||[], a.neverEtc?[a.neverEtc]:[]).join(', ');
+    if (!cant && !a.must) return '';
     const bits = [];
-    if (a.must) bits.push(`꼭: ${esc(a.must)}`);
-    const nv = (a.never||[]).concat(a.neverEtc ? [a.neverEtc] : []);
-    if (nv.length) bits.push(`<span style="color:var(--red)">싫다: ${nv.map(esc).join(', ')}</span>`);
+    if (cant) bits.push(`<span style="color:var(--red)">못 먹음: ${esc(cant)}</span>`);
+    if (a.must) bits.push(esc(a.must));
     return `<div class="wish"><b>${esc(a.character||'')} ${esc(a.nickname)}</b>${bits.join(' · ')}</div>`;
-  });
-  return rows.length ? `<div class="card"><h3 style="margin-bottom:6px">꼭 / 절대 싫다</h3>${rows.join('')}</div>` : '';
+  }).filter(Boolean);
+  return rows.length ? `<div class="card"><h3 style="margin-bottom:6px">못 먹는 거 · 한마디</h3>${rows.join('')}</div>` : '';
 }
 
 /* ================= 헬퍼 ================= */
 function stepOk(){
   const s = STEPS[step];
   if (s.who) return !!(A.nickname.trim() && A.character);
-  return s.keys.every(k => k==='never' || (Q[k].type==='multi' ? A[k].length>0 : !!A[k]));
+  return s.keys.every(k => Q[k].type==='multi' ? A[k].length>0 : !!A[k]);
 }
 function setNav(html){ $navIn.innerHTML = html; $nav.hidden = !html; }
 function esc(s){ return String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -713,11 +708,6 @@ document.addEventListener('click', async e=>{
     if (row) row.closest('.place').outerHTML = placeRow(DATA.places.find(p=>p.name===place));
     return;
   }
-  if (act==='never'){
-    const v = el.dataset.val;
-    A.never = A.never.includes(v) ? A.never.filter(x=>x!==v) : [...A.never, v];
-    el.setAttribute('aria-pressed', A.never.includes(v)); return;
-  }
 });
 
 document.addEventListener('input', e=>{
@@ -725,7 +715,7 @@ document.addEventListener('input', e=>{
     A.nickname = e.target.value;
   }
   if (e.target.id==='must') A.must = e.target.value;
-  if (e.target.id==='neverEtc') A.neverEtc = e.target.value;
+  if (e.target.id==='cantEat') A.cantEat = e.target.value;
   refreshNext();
 });
 
