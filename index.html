@@ -229,6 +229,20 @@ details.card[open] summary::after{content:"–"}
 .grp .gm span{background:var(--card);border-radius:999px;padding:5px 11px 5px 8px;font-size:.92rem;font-weight:500}
 .grp .gc{font-size:.82rem;color:var(--secondary);margin-top:8px}
 .seg.split{margin-top:12px;width:100%}
+.place{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--sep);color:inherit;text-decoration:none}
+.ptitle+.place{border-top:none}
+.place .main{flex:1;min-width:0}
+.place .pn{font-weight:600}
+.place .pm{font-size:.84rem;color:var(--secondary);margin-top:1px}
+.place .main{color:inherit;text-decoration:none}
+.place .go{font-size:.8rem;font-weight:600;color:var(--accent);margin-left:4px}
+.place .pw{font-size:.8rem;color:var(--secondary);margin-top:4px}
+a.main:active{opacity:.6}
+.like{all:unset;cursor:pointer;flex:none;display:flex;align-items:center;gap:4px;padding:7px 11px;border-radius:999px;
+  background:var(--fill);font-size:1rem;filter:grayscale(1);transition:filter .15s}
+.like span{font-size:.85rem;font-weight:600;font-variant-numeric:tabular-nums;min-width:.6em}
+.like[aria-pressed="true"]{filter:none;background:color-mix(in srgb, var(--accent) 16%, var(--card));color:var(--accent)}
+.like:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style>
 </head>
 <body>
@@ -290,7 +304,11 @@ const blank = () => ({nickname:'', character:'', meet:'', lunch:[], day:[], cafe
   dinner:[], after:[], rounds:'', wake:'', breakfast:'', bye:'', never:[], must:'', neverEtc:''});
 let A = blank();
 let view = 'intro', step = 0;
-let DATA = {members:[], answers:[], match:null};
+let DATA = {members:[], answers:[], match:null, places:[], likes:{}};
+const ME_KEY = 'plan26_me';
+function getMe(){ try { return JSON.parse(localStorage.getItem(ME_KEY)) || null; } catch(_) { return null; } }
+function setMe(v){ try { localStorage.setItem(ME_KEY, JSON.stringify(v)); } catch(_) {} }
+let ME = getMe();
 let split = 'trios';
 const demo = !CONFIG.SCRIPT_URL;
 const DEMO = {
@@ -312,6 +330,14 @@ DEMO.match = {
         {name:'기록 담당',emoji:'📸',score:66,members:[{nick:'개굴',char:'🐸'},{nick:'ㅉㅉ',char:'🐰'}],common:['네컷·사진']},
         {name:'식후경',emoji:'🍚',score:58,members:[{nick:'무야',char:'🐼'},{nick:'벅벅숭',char:'🐯'}],common:['맛집','소품샵']}]
 };
+
+DEMO.places = [
+  {cat:'한식', name:'예시 한식집', link:'https://map.naver.com', memo:'웨이팅 짧음'},
+  {cat:'한식', name:'예시 백반집', link:'', memo:''},
+  {cat:'막걸리', name:'예시 주막', link:'https://map.naver.com', memo:'파전 필수'},
+  {cat:'카페', name:'예시 카페', link:'https://map.naver.com', memo:'6명 앉을 자리 있음'}
+];
+DEMO.likes = {'예시 주막':['가람','개굴'], '예시 백반집':['ㅉㅉ']};
 
 /* ================= 렌더 ================= */
 const $app = document.getElementById('app'), $nav = document.getElementById('nav'), $navIn = document.getElementById('navIn');
@@ -425,6 +451,7 @@ async function renderResult(){
     <details class="card"><summary>칸별 득표</summary>
       ${Object.keys(Q).filter(k=>k!=='never').map(k=>`<div class="q-sec"><h4>${Q[k].label}</h4>${barsHTML(k, ans)}</div>`).join('')}
     </details>
+    ${placesHTML()}
     <p class="sub" style="text-align:center;margin-top:16px">동점은 ‘또는’으로 표시. 단톡에서 택1</p>`;
   setNav(`<button class="btn text" data-act="start">${A.nickname?'수정':'참여'}</button>
           <button class="btn primary" data-act="go-result">새로고침</button>`);
@@ -547,6 +574,32 @@ function groupsHTML(){
     </div>`).join('');
 }
 
+function placesHTML(){
+  const ps = DATA.places || [];
+  if (!ps.length) return '';
+  const cats = [];
+  ps.forEach(p=>{ if (!cats.includes(p.cat)) cats.push(p.cat); });
+  const cnt = p => (DATA.likes[p.name]||[]).length;
+  return `<div class="card" id="places"><h3>${esc(CONFIG.PICK_TITLE)}</h3><p class="sub">아는 집 모아둠. 가고 싶으면 👍</p>
+    ${cats.map(c=>`<div class="ptitle">${esc(c)}</div>
+      ${ps.map((p,i)=>({p,i})).filter(x=>x.p.cat===c).sort((x,y)=>cnt(y.p)-cnt(x.p) || x.i-y.i).map(({p})=>placeRow(p)).join('')}`).join('')}
+    <div class="hint" id="likeHint" style="margin:8px 0 0"></div>
+  </div>`;
+}
+
+function placeRow(p){
+  const who = DATA.likes[p.name] || [];
+  const mine = ME && who.includes(ME.nickname);
+  const chars = Object.fromEntries((DATA.answers||[]).map(a=>[a.nickname, a.character]));
+  const inner = `<div class="pn">${esc(p.name)}${p.link?' <span class="go">지도 ›</span>':''}</div>
+    ${p.memo?`<div class="pm">${esc(p.memo)}</div>`:''}
+    ${who.length?`<div class="pw">${who.map(n=>`${esc(chars[n]||'')} ${esc(n)}`).join(' · ')}</div>`:''}`;
+  return `<div class="place">
+    ${p.link ? `<a class="main" href="${esc(p.link)}" target="_blank" rel="noopener">${inner}</a>` : `<div class="main">${inner}</div>`}
+    <button class="like" data-act="like" data-place="${esc(p.name)}" aria-pressed="${!!mine}" aria-label="좋아요">👍<span>${who.length||''}</span></button>
+  </div>`;
+}
+
 function wishesHTML(ans){
   const rows = ans.filter(a=>a.must || a.neverEtc || (a.never||[]).length).map(a=>{
     const bits = [];
@@ -573,11 +626,11 @@ function refreshNext(){
 
 /* ================= API ================= */
 async function load(){
-  if (demo){ await new Promise(r=>setTimeout(r,250)); DATA = {members:DEMO.members, answers:DEMO.answers, match: DEMO.answers.length>=CONFIG.MEMBERS ? DEMO.match : null}; return; }
+  if (demo){ await new Promise(r=>setTimeout(r,250)); DATA = {members:DEMO.members, answers:DEMO.answers, match: DEMO.answers.length>=CONFIG.MEMBERS ? DEMO.match : null, places:DEMO.places, likes:DEMO.likes}; return; }
   const res = await fetch(`${CONFIG.SCRIPT_URL}?action=round2`);
   const j = await res.json();
   if (!j.ok) throw new Error(j.error || '불러오기 실패');
-  DATA = {members:j.members||[], answers:j.answers||[], match:j.match||null};
+  DATA = {members:j.members||[], answers:j.answers||[], match:j.match||null, places:j.places||[], likes:j.likes||{}};
 }
 async function submit(){
   const body = {...A, round:2, nickname:A.nickname.trim(), submittedAt:new Date().toISOString()};
@@ -607,7 +660,7 @@ document.addEventListener('click', async e=>{
     if (!stepOk()){ document.getElementById('hint').textContent='골라주세요'; return; }
     if (step < STEPS.length-1){ step++; render(); return; }
     el.disabled = true; el.textContent = '보내는 중';
-    try { await submit(); view='done'; render(); }
+    try { await submit(); ME = {nickname:A.nickname.trim(), character:A.character}; setMe(ME); view='done'; render(); }
     catch(err){ el.disabled=false; el.textContent='제출'; document.getElementById('hint').textContent=`저장 실패: ${err.message}`; }
     return;
   }
@@ -634,6 +687,31 @@ document.addEventListener('click', async e=>{
     split = el.dataset.val;
     el.parentElement.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed', b===el));
     document.getElementById('groups').innerHTML = groupsHTML(); return;
+  }
+  if (act==='like'){
+    const place = el.dataset.place;
+    const hint = document.getElementById('likeHint');
+    if (!ME){ hint.textContent = '2차 설문 낸 폰에서 누를 수 있어요'; return; }
+    const before = (DATA.likes[place]||[]).slice();
+    const on = !before.includes(ME.nickname);
+    DATA.likes[place] = on ? before.concat(ME.nickname) : before.filter(n=>n!==ME.nickname);
+    el.closest('.place').outerHTML = placeRow(DATA.places.find(p=>p.name===place));
+    try {
+      if (demo) await new Promise(r=>setTimeout(r,150));
+      else {
+        const res = await fetch(CONFIG.SCRIPT_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+          body:JSON.stringify({type:'like', nickname:ME.nickname, place})});
+        const j = await res.json();
+        if (!j.ok) throw new Error(j.error||'실패');
+        DATA.likes[place] = j.likes;
+      }
+    } catch(err){
+      DATA.likes[place] = before;
+      hint.textContent = '저장 실패. 다시 눌러줘';
+    }
+    const row = [...document.querySelectorAll('#places .like')].find(b=>b.dataset.place===place);
+    if (row) row.closest('.place').outerHTML = placeRow(DATA.places.find(p=>p.name===place));
+    return;
   }
   if (act==='never'){
     const v = el.dataset.val;
