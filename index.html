@@ -3,10 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>26 — 서울 1박 2일</title>
-<meta property="og:title" content="26">
-<meta property="og:description" content="2학년 6반 20주년, 서울 1박 2일 의견 모으기">
-<!-- <meta property="og:image" content="https://배포주소/og.png"> 카톡 썸네일용, 1200x630 -->
+<title>26 — 일정 정하기</title>
+<meta property="og:title" content="26 · 2차">
+<meta property="og:description" content="서울 1박 2일, 칸마다 골라서 일정 조립하기">
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
 <style>
 :root{
@@ -169,330 +168,442 @@ button.row:active{background:var(--fill)}
 .sealed .i{font-size:3rem}
 
 @media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}.done circle,.done path{stroke-dashoffset:0}}
+/* 2차 추가 */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.chip{all:unset;cursor:pointer;padding:9px 14px;border-radius:999px;background:var(--card);font-size:.95rem;font-weight:500;box-shadow:inset 0 0 0 1.5px var(--sep)}
+.chip[aria-pressed="true"]{background:var(--accent);color:#fff;box-shadow:none}
+.chip.no[aria-pressed="true"]{background:var(--red)}
+.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.limit{font-size:.82rem;color:var(--secondary);margin:4px 16px 0}
+.who{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
+.who button{all:unset;cursor:pointer;text-align:center;padding:12px 4px;border-radius:14px;background:var(--card);box-shadow:inset 0 0 0 2px transparent}
+.who button[aria-pressed="true"]{box-shadow:inset 0 0 0 2.5px var(--accent)}
+.who .e{font-size:2rem;line-height:1.2}
+.who .n{font-size:.9rem;font-weight:500;margin-top:4px;word-break:keep-all}
+.stay{display:flex;gap:10px;align-items:center;background:var(--card);border-radius:14px;padding:12px 16px;margin:18px 0;font-size:.92rem}
+.stay b{font-weight:600}
+
+.tl{position:relative;margin:6px 0 0;padding:0}
+.tl .day{font-size:.8rem;font-weight:700;color:var(--secondary);margin:20px 0 6px}
+.tl .day:first-child{margin-top:0}
+.slot{display:grid;grid-template-columns:76px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--sep)}
+.slot .k{font-size:.8rem;color:var(--secondary);padding-top:2px}
+.slot .v{font-weight:600}
+.slot .v .or{color:var(--secondary);font-weight:500}
+.slot .note{font-size:.82rem;color:var(--secondary);font-weight:400;margin-top:2px}
+.slot .warn{font-size:.82rem;color:var(--red);font-weight:500;margin-top:2px}
+.bars{margin-top:4px}
+.b{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:6px 0}
+.b .bl{font-size:.9rem}
+.b .bn{font-size:.85rem;color:var(--secondary);font-variant-numeric:tabular-nums}
+.b .bm{grid-column:1/-1;height:6px;border-radius:3px;background:var(--fill);overflow:hidden}
+.b .bm i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.b.top .bm i{background:var(--green)}
+.b.veto .bl{color:var(--red)}
+.b.veto .bm i{background:var(--red)}
+details.card summary{cursor:pointer;font-weight:700;font-size:1.05rem;list-style:none}
+details.card summary::-webkit-details-marker{display:none}
+details.card summary::after{content:"+";float:right;color:var(--secondary);font-weight:500}
+details.card[open] summary::after{content:"–"}
+.q-sec{margin-top:16px}
+.q-sec h4{margin:0 0 2px;font-size:.92rem}
+.wish{padding:8px 0;border-top:1px solid var(--sep);font-size:.93rem}
+.wish:first-child{border-top:none}
+.wish b{font-weight:600;margin-right:6px}
+.pair{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:12px 0;border-top:1px solid var(--sep)}
+.pair:first-of-type{border-top:none}
+.pair .who2{font-weight:600}
+.pair .sc{font-size:1.25rem;font-weight:700;letter-spacing:-0.03em;font-variant-numeric:tabular-nums}
+.pair .sc small{font-size:.75rem;color:var(--secondary);font-weight:500;margin-left:1px}
+.pair .rs{grid-column:1/-1;font-size:.85rem;color:var(--secondary)}
+.pair.hot .sc{color:var(--green)}
+.pair.cold .sc{color:var(--red)}
+.ptitle{font-size:.8rem;font-weight:700;color:var(--secondary);margin:16px 0 0}
+.ptitle:first-of-type{margin-top:10px}
+.groups{display:grid;gap:10px;margin-top:14px}
+.grp{border-radius:14px;background:var(--fill);padding:14px}
+.grp .gh{display:flex;justify-content:space-between;align-items:baseline}
+.grp .gn{font-weight:700;font-size:1.05rem}
+.grp .gs{font-size:.8rem;color:var(--secondary)}
+.grp .gm{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.grp .gm span{background:var(--card);border-radius:999px;padding:5px 11px 5px 8px;font-size:.92rem;font-weight:500}
+.grp .gc{font-size:.82rem;color:var(--secondary);margin-top:8px}
+.seg.split{margin-top:12px;width:100%}
 </style>
 </head>
 <body>
 <main id="app" aria-live="polite"></main>
 <nav class="nav" id="nav" hidden><div class="nav-in" id="navIn"></div></nav>
-
 <script>
 /* ================= 설정 ================= */
 const CONFIG = {
-  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyWlEo1vzPmcMA17bV-f7WhxcFOHCBRNJgkDH1pNEwtMhxGGF0RktXtww1EkcfXN2iM/exec',          // Apps Script 웹앱 URL. 비우면 미리보기 모드
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyWlEo1vzPmcMA17bV-f7WhxcFOHCBRNJgkDH1pNEwtMhxGGF0RktXtww1EkcfXN2iM/exec', 
   MEMBERS: 6,
-  DEADLINE: '10월 25일'
+  DEADLINE: '10월 22일',
+  STAY: '서촌 사직로9길 · 경복궁 근처'
 };
 
 /* ================= 문항 ================= */
+const Q = {
+  meet:     {label:'집결', type:'one', opts:['11시','12시','13시','14시']},
+  lunch:    {label:'점심', type:'multi', max:2, opts:['한식','중식','일식','양식','시장 먹거리','분식']},
+  day:      {label:'하고 싶은 거', type:'multi', max:2, opts:['경복궁','미술관·전시','골목 산책','소품샵','인왕산 산책','네컷·사진']},
+  cafe:     {label:'카페', type:'one', opts:['꼭 가자','한 곳만','패스']},
+  free:     {label:'자유시간', type:'one', opts:['Y','N'], show:{Y:'있으면 좋겠다', N:'계속 다 같이'}},
+  rest:     {label:'휴식', type:'one', opts:['숙소에서 쉬기','카페로 대체','필요 없음']},
+  dinner:   {label:'저녁 1차', type:'multi', max:2, opts:['고기','한식 노포','해산물','중식','이자카야']},
+  after:    {label:'2차 이후', type:'multi', max:3, opts:['막걸리','와인바','포차','루프탑','숙소에서']},
+  rounds:   {label:'몇 차까지', type:'one', opts:['2차','3차','4차','끝까지']},
+  wake:     {label:'기상', type:'one', opts:['9시','10시','11시']},
+  breakfast:{label:'아침', type:'one', opts:['해장국','브런치','편의점','패스']},
+  bye:      {label:'해산', type:'one', opts:['13시','15시','17시']},
+  never:    {label:'절대 싫다', type:'multi', max:99, groups:{
+              '음식':['한식','중식','일식','양식','분식','고기','해산물','이자카야','매운 거','느끼한 거'],
+              '활동':['경복궁','미술관·전시','인왕산 산책','소품샵','루프탑'],
+              '기타':['웨이팅','언덕','붐비는 곳']}}
+};
 const CHARS = ['🐻','🐰','🦊','🐸','🐱','🐶','🐼','🐧','🐹','🐯','🐥','🦦'];
-const STAY_PURPOSE = [
-  {v:'sleep', t:'잠만 잔다', d:'위치랑 가격 우선'},
-  {v:'rest',  t:'깔끔하게 쉬기', d:'좋은 침구, 깨끗한 욕실'},
-  {v:'party', t:'숙소에서 같이 놀기', d:'밤새 먹고 떠들기'},
-  {v:'vibe',  t:'숙소 자체가 목적', d:'한옥, 감성 스테이'}
+const ROUND_N = {'2차':2,'3차':3,'4차':4,'끝까지':5};
+
+const STEPS = [
+  {title:'누구야', keys:[], who:true},
+  {title:'몇 시에 모일까', keys:['meet']},
+  {title:'점심 뭐 먹지', sub:'2개까지', keys:['lunch']},
+  {title:'하고 싶은 거', sub:'2개까지', keys:['day','cafe']},
+  {title:'쉬어 가기', keys:['free','rest']},
+  {title:'저녁 1차', sub:'2개까지', keys:['dinner']},
+  {title:'그 다음', sub:'3개까지', keys:['after','rounds']},
+  {title:'둘째 날', keys:['wake','breakfast','bye']},
+  {title:'마지막으로', keys:['never'], last:true}
 ];
-const STAY_TYPES = [
-  {v:'hotel', t:'호텔'},
-  {v:'airbnb', t:'에어비앤비 통째'},
-  {v:'hanok', t:'한옥스테이'},
-  {v:'partyroom', t:'파티룸형 숙소'},
-  {v:'guesthouse', t:'게스트하우스'}
-];
-const BUDGET = [
-  {v:'~5만', t:'5만원 이하'},
-  {v:'5~10만', t:'5만 – 10만원'},
-  {v:'10~15만', t:'10만 – 15만원'},
-  {v:'15만~', t:'15만원 이상'},
-  {v:'상관없음', t:'맞춰 갈게'}
-];
-const ACTIVITIES = [
-  {v:'food', t:'맛집, 노포'},
-  {v:'night', t:'술집, 루프탑'},
-  {v:'cafe', t:'카페, 디저트'},
-  {v:'walk', t:'골목 산책'},
-  {v:'culture', t:'고궁, 전시'},
-  {v:'shop', t:'소품샵, 쇼핑'},
-  {v:'photo', t:'단체사진, 스냅'},
-  {v:'stayplay', t:'숙소에서 같이 놀기'}
-];
-const FACES = ['😑','🙂','😊','😆','🤩'];
-const AREAS = [
-  {v:'해방촌', t:'해방촌', d:'언덕, 루프탑, 야경'},
-  {v:'이태원', t:'이태원', d:'다국적 음식, 바'},
-  {v:'종로', t:'종로', d:'익선동 골목, 노포, 고궁'},
-  {v:'서촌', t:'서촌', d:'한옥 골목, 시장, 조용한 카페'},
-  {v:'북촌', t:'북촌', d:'한옥마을, 삼청동'},
-  {v:'상관없음', t:'다 좋아', d:''}
-];
-const PACE = [
-  {v:'빡빡', t:'꽉 채우기', d:'갈 수 있는 데 다'},
-  {v:'적당', t:'적당히', d:'굵직한 거 두세 개'},
-  {v:'여유', t:'여유롭게', d:'수다가 메인'}
-];
-const STAMINA = [
-  {v:'강', t:'많이 걸어도 OK'},
-  {v:'중', t:'적당히'},
-  {v:'약', t:'택시 위주'}
-];
+const SUBS = {
+  meet:'', cafe:'카페', free:'자유시간 1~2시간 (각자 하고 싶은 거)', rest:'저녁 전 휴식',
+  rounds:'몇 차까지 갈래', wake:'기상', breakfast:'아침', bye:'해산', after:'2차부터 가고 싶은 곳', day:'다 같이 하고 싶은 거'
+};
 
 /* ================= 상태 ================= */
-const blank = () => ({
-  nickname:'', character:'',
-  stayPurpose:'', stayTypes:Object.fromEntries(STAY_TYPES.map(s=>[s.v,'ok'])),
-  budget:'', activities:{}, areas:[], pace:'', stamina:'',
-  mustDo:'', dislike:''
-});
+const blank = () => ({nickname:'', character:'', meet:'', lunch:[], day:[], cafe:'', free:'', rest:'',
+  dinner:[], after:[], rounds:'', wake:'', breakfast:'', bye:'', never:[], must:'', neverEtc:''});
 let A = blank();
-let view = 'intro';   // intro | form | done | roll | result
-let step = 0;
+let view = 'intro', step = 0;
+let DATA = {members:[], answers:[], match:null};
+let split = 'trios';
 const demo = !CONFIG.SCRIPT_URL;
-const demoStore = [{nickname:'땡칠', character:'🐶'}, {nickname:'뭉치', character:'🐼'}];
+const DEMO = {
+  members:[['가람','🐻'],['귄카','🦊'],['개굴','🐸'],['ㅉㅉ','🐰'],['무야','🐼'],['벅벅숭','🐯']].map(([n,c])=>({nickname:n,character:c})),
+  answers:[
+    {nickname:'가람',character:'🐻',meet:'12시',lunch:['한식','중식'],day:['경복궁','골목 산책'],cafe:'한 곳만',free:'N',rest:'숙소에서 쉬기',dinner:['고기','한식 노포'],after:['막걸리','포차','루프탑'],rounds:'끝까지',wake:'11시',breakfast:'해장국',bye:'15시',never:['디저트'],must:'4차',neverEtc:''},
+    {nickname:'개굴',character:'🐸',meet:'13시',lunch:['한식','시장 먹거리'],day:['미술관·전시','네컷·사진'],cafe:'한 곳만',free:'Y',rest:'숙소에서 쉬기',dinner:['한식 노포','해산물'],after:['막걸리','와인바'],rounds:'3차',wake:'10시',breakfast:'해장국',bye:'15시',never:['느끼한 거','양식'],must:'낮맥, 네컷',neverEtc:''},
+    {nickname:'ㅉㅉ',character:'🐰',meet:'12시',lunch:['일식','한식'],day:['경복궁','네컷·사진'],cafe:'꼭 가자',free:'Y',rest:'숙소에서 쉬기',dinner:['고기','이자카야'],after:['막걸리','숙소에서'],rounds:'3차',wake:'10시',breakfast:'브런치',bye:'15시',never:['웨이팅'],must:'파자마 게임',neverEtc:''}
+  ]
+};
 
-/* ================= 스텝 ================= */
-const STEPS = [
-  {
-    render: () => `
-      <h2>누구야</h2>
-      <p class="sub">같은 닉네임으로 다시 내면 수정돼요</p>
-      <div class="field"><input id="nick" type="text" maxlength="12" autocomplete="off" value="${esc(A.nickname)}" placeholder="닉네임"></div>
-      <div class="chars">${CHARS.map(c=>`<button class="char" data-act="char" data-val="${c}" aria-pressed="${A.character===c}" aria-label="${c}">${c}</button>`).join('')}</div>`,
-    ok: () => A.nickname.trim() && A.character,
-    why: '닉네임과 캐릭터를 골라주세요'
-  },
-  {
-    render: () => `<h2>숙소는 나한테</h2><p class="sub">하나만</p>${rows(STAY_PURPOSE,'stayPurpose',false)}`,
-    ok: () => !!A.stayPurpose, why: '하나 골라주세요'
-  },
-  {
-    render: () => `
-      <h2>숙소 형태</h2><p class="sub">싫어는 진짜 싫을 때만</p>
-      <div class="group">${STAY_TYPES.map(s=>`
-        <div class="row"><div class="main"><div class="t">${s.t}</div></div>
-          <div class="seg" role="group" aria-label="${s.t}">
-            ${[['like','좋아'],['ok','무난'],['no','싫어']].map(([v,l])=>
-              `<button data-act="tri" data-key="${s.v}" data-val="${v}" aria-pressed="${A.stayTypes[s.v]===v}">${l}</button>`).join('')}
-          </div></div>`).join('')}
-      </div>`,
-    ok: () => true
-  },
-  {
-    render: () => `<h2>1인 1박 숙소비</h2><p class="sub">결과엔 분포로만 쓰여요</p>${rows(BUDGET,'budget',false)}`,
-    ok: () => !!A.budget, why: '하나 골라주세요'
-  },
-  {
-    render: () => {
-      const left = ACTIVITIES.filter(a=>!A.activities[a.v]).length;
-      return `
-      <h2>얼마나 끌려?</h2><p class="sub" id="left">${left ? `${left}개 남음` : '완료'}</p>
-      <div class="group">${ACTIVITIES.map(a=>`
-        <div class="row rate"><div class="t">${a.t}</div>
-          <div class="seg wide" role="group" aria-label="${a.t}">
-            ${FACES.map((f,i)=>`<button data-act="rate" data-key="${a.v}" data-val="${i+1}" aria-pressed="${A.activities[a.v]===i+1}" aria-label="${i+1}점">${f}</button>`).join('')}
-          </div></div>`).join('')}
-      </div>
-      <div class="scale"><span>별로</span><span>완전 좋아</span></div>`;
-    },
-    ok: () => ACTIVITIES.every(a=>A.activities[a.v]), why: '전부 하나씩 골라주세요'
-  },
-  {
-    render: () => `<h2>끌리는 동네</h2><p class="sub">여러 개 가능</p>${rows(AREAS,'areas',true)}`,
-    ok: () => A.areas.length > 0, why: '하나 이상 골라주세요'
-  },
-  {
-    render: () => `
-      <h2>페이스</h2>
-      <div class="group-title">여행 템포</div>${rows(PACE,'pace',false)}
-      <div class="group-title">체력</div>${rows(STAMINA,'stamina',false)}`,
-    ok: () => A.pace && A.stamina, why: '둘 다 골라주세요'
-  },
-  {
-    render: () => `
-      <h2>마지막으로</h2><p class="sub">비워도 괜찮아요</p>
-      <div class="label">이번엔 이것만은 꼭</div>
-      <div class="field"><textarea id="must" maxlength="200" placeholder="단체사진 제대로 한 장">${esc(A.mustDo)}</textarea></div>
-      <div class="label">이건 싫어</div>
-      <div class="field"><textarea id="nope" maxlength="200" placeholder="한 시간 줄 서는 집">${esc(A.dislike)}</textarea></div>`,
-    ok: () => true
-  }
-];
+DEMO.match = {
+  best:[{a:'가람',ac:'🐻',b:'귄카',bc:'🦊',score:78,why:['둘 다 끝까지','둘 다 막걸리']},
+        {a:'개굴',ac:'🐸',b:'ㅉㅉ',bc:'🐰',score:66,why:['둘 다 네컷·사진','둘 다 자유시간']}],
+  worst:{a:'가람',ac:'🐻',b:'ㅉㅉ',bc:'🐰',score:21,why:['카페 온도차','가람은 끝까지, 한 명은 일찍 귀가']},
+  trios:[{name:'야행성',emoji:'🌙',score:70,members:[{nick:'가람',char:'🐻'},{nick:'귄카',char:'🦊'},{nick:'벅벅숭',char:'🐯'}],common:['포차','술','맛집']},
+         {name:'기록 담당',emoji:'📸',score:61,members:[{nick:'개굴',char:'🐸'},{nick:'ㅉㅉ',char:'🐰'},{nick:'무야',char:'🐼'}],common:['네컷·사진','자유시간']}],
+  duos:[{name:'야행성',emoji:'🌙',score:78,members:[{nick:'가람',char:'🐻'},{nick:'귄카',char:'🦊'}],common:['막걸리','끝까지']},
+        {name:'기록 담당',emoji:'📸',score:66,members:[{nick:'개굴',char:'🐸'},{nick:'ㅉㅉ',char:'🐰'}],common:['네컷·사진']},
+        {name:'식후경',emoji:'🍚',score:58,members:[{nick:'무야',char:'🐼'},{nick:'벅벅숭',char:'🐯'}],common:['맛집','소품샵']}]
+};
 
 /* ================= 렌더 ================= */
-const $app = document.getElementById('app');
-const $nav = document.getElementById('nav');
-const $navIn = document.getElementById('navIn');
+const $app = document.getElementById('app'), $nav = document.getElementById('nav'), $navIn = document.getElementById('navIn');
 
 function render(){
-  ({intro:renderIntro, form:renderForm, done:renderDone, roll:renderRoll, result:renderResult})[view]();
+  ({intro:renderIntro, form:renderForm, done:renderDone, result:renderResult})[view]();
   window.scrollTo(0,0);
 }
 
 function renderIntro(){
   $app.innerHTML = `
     ${demo ? '<div class="demo">미리보기 모드 · 저장되지 않음</div>' : ''}
-    <section class="hero">
+    <section class="hero" style="padding-bottom:18px">
       <div class="num">26</div>
-      <div class="cls">2학년 6반, 20년.</div>
-      <div class="what">서울에서 1박 2일.</div>
+      <div class="cls">2차. 일정 정하기.</div>
+      <div class="what">칸마다 고르면 1등끼리 조립해요.</div>
     </section>
+    <div class="stay"><span style="font-size:1.4rem">🏠</span><div><b>숙소 확정</b><div class="sub" style="margin:0">${esc(CONFIG.STAY)}</div></div></div>
     <div class="group">
-      <div class="row"><div class="main"><div class="t">후보</div></div><div class="val">해방촌 이태원 종로 서촌 북촌</div></div>
       <div class="row"><div class="main"><div class="t">마감</div></div><div class="val">${esc(CONFIG.DEADLINE)}</div></div>
       <div class="row"><div class="main"><div class="t">소요</div></div><div class="val">2분</div></div>
     </div>
-    <p class="sub" style="margin:0 16px">답이 모이면 AI가 정리하고, 마지막은 투표로 정해요.</p>`;
-  setNav(`<button class="btn text" data-act="go-roll">현황</button>
+    <p class="sub" style="margin:0 16px">‘이번에도 잘 골라보시오'.</p>`;
+  setNav(`<button class="btn text" data-act="go-result">결과</button>
           <button class="btn primary" data-act="start">시작하기</button>`);
 }
 
 function renderForm(){
   const s = STEPS[step];
   const pct = Math.round((step+1)/STEPS.length*100);
+  let body = '';
+  if (s.who) body = whoHTML();
+  else if (s.last) body = neverHTML();
+  else body = s.keys.map((k,i)=>{
+    const q = Q[k];
+    const title = (i>0 || s.keys.length>1) && SUBS[k] ? `<div class="group-title">${SUBS[k]}${q.type==='multi'?` · ${q.max}개까지`:''}</div>` : '';
+    return title + rowsHTML(k);
+  }).join('');
   $app.innerHTML = `
     <div class="progress"><div class="bar"><i style="width:${pct}%"></i></div><div class="cnt">${step+1} / ${STEPS.length}</div></div>
-    ${s.render()}
+    <h2>${s.title}</h2>${s.sub && s.keys.length===1 ? `<p class="sub">${s.sub}</p>`:''}
+    ${body}
     <div class="hint" id="hint"></div>`;
   const last = step === STEPS.length-1;
   setNav(`<button class="btn text" data-act="back">이전</button>
-          <button class="btn primary" data-act="next" ${s.ok()?'':'disabled'}>${last?'제출':'다음'}</button>`);
+          <button class="btn primary" data-act="next" ${stepOk()?'':'disabled'}>${last?'제출':'다음'}</button>`);
+}
+
+function whoHTML(){
+  return `<p class="sub">새 닉네임 OK.</p>
+    <div class="field"><input id="nick" type="text" maxlength="12" autocomplete="off" value="${esc(A.nickname)}" placeholder="닉네임"></div>
+    <div class="chars">${CHARS.map(c=>`<button class="char" data-act="char" data-val="${c}" aria-pressed="${A.character===c}" aria-label="${c}">${c}</button>`).join('')}</div>`;
+}
+
+function rowsHTML(k){
+  const q = Q[k];
+  const multi = q.type==='multi';
+  return `<div class="group">${q.opts.map(o=>{
+    const on = multi ? A[k].includes(o) : A[k]===o;
+    const t = q.show ? q.show[o] : o;
+    return `<button class="row" data-act="pick" data-key="${k}" data-val="${esc(o)}" aria-pressed="${on}">
+      <div class="main"><div class="t">${esc(t)}</div></div><span class="check">✓</span></button>`;
+  }).join('')}</div>`;
+}
+
+function neverHTML(){
+  const g = Q.never.groups;
+  return `<div class="label">절대 싫은 거 · 없으면 넘어가기</div>
+    ${Object.entries(g).map(([name, opts])=>`
+      <div class="group-title" style="margin-bottom:0">${name}</div>
+      <div class="chips">${opts.map(o=>`<button class="chip no" data-act="never" data-val="${esc(o)}" aria-pressed="${A.never.includes(o)}">${esc(o)}</button>`).join('')}</div>`).join('')}
+    <div class="field"><input id="neverEtc" type="text" maxlength="60" value="${esc(A.neverEtc)}" placeholder="기타 싫은 거"></div>
+    <div class="label">이번엔 이건 꼭 (먹기, 하기)</div>
+    <div class="field"><textarea id="must" maxlength="200" placeholder="예: 막걸리에 파전, 단체 네컷">${esc(A.must)}</textarea></div>`;
 }
 
 function renderDone(){
   $app.innerHTML = `<div class="done">
     <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="45"/><path d="M30 52 l14 14 l26 -30"/></svg>
     <div><h2>제출 완료</h2><p class="sub">${esc(A.character)} ${esc(A.nickname)}</p></div></div>`;
-  setNav(`<button class="btn primary" data-act="go-roll">현황 보기</button>`);
+  setNav(`<button class="btn primary" data-act="go-result">결과 보기</button>`);
 }
 
-async function renderRoll(){
-  $app.innerHTML = `<p class="sub" style="padding-top:20vh;text-align:center">불러오는 중</p>`;
-  setNav('');
-  let members;
-  try { members = await api('status'); }
-  catch(e){
-    $app.innerHTML = `<h2>현황</h2><p class="hint">불러오지 못함: ${esc(e.message)}</p>`;
-    setNav(`<button class="btn primary" data-act="go-roll">다시 시도</button>`); return;
-  }
-  const n = Math.max(CONFIG.MEMBERS, members.length);
-  const avs = Array.from({length:n}, (_,i)=>{
-    const m = members[i];
-    return m ? `<div class="av"><div class="c">${esc(m.character)}</div><div class="n">${esc(m.nickname)}</div></div>`
-             : `<div class="av empty"><div class="c">?</div><div class="n">대기</div></div>`;
-  }).join('');
-  $app.innerHTML = `
-    <h2>현황</h2>
-    <div class="count">${members.length}<span>/${CONFIG.MEMBERS}</span></div>
-    <p class="sub">${members.length>=CONFIG.MEMBERS ? '다 모였어요' : `마감 ${esc(CONFIG.DEADLINE)}`}</p>
-    <div class="avatars">${avs}</div>`;
-  setNav(`<button class="btn text" data-act="edit">${A.nickname ? '수정' : '참여'}</button>
-          <button class="btn primary" data-act="go-result">결과 보기</button>`);
-}
-
+/* ================= 결과 ================= */
 async function renderResult(){
   $app.innerHTML = `<p class="sub" style="padding-top:20vh;text-align:center">불러오는 중</p>`;
   setNav('');
-  let r;
-  try { r = await api('result'); }
+  try { await load(); }
   catch(e){
     $app.innerHTML = `<h2>결과</h2><p class="hint">불러오지 못함: ${esc(e.message)}</p>`;
-    setNav(`<button class="btn primary" data-act="go-roll">현황으로</button>`); return;
+    setNav(`<button class="btn primary" data-act="go-result">다시 시도</button>`); return;
   }
-  if (!r){
-    $app.innerHTML = `<div class="sealed"><div class="i">🔒</div><h2 style="margin-top:12px">아직이에요</h2><p class="sub">다 모이면 열려요</p></div>`;
-    setNav(`<button class="btn primary" data-act="go-roll">현황으로</button>`); return;
+  const ans = DATA.answers, n = ans.length;
+  const done = n >= CONFIG.MEMBERS;
+  const avs = ans.map(a=>`<div class="av"><div class="c">${esc(a.character)}</div><div class="n">${esc(a.nickname)}</div></div>`).join('')
+    + Array.from({length:Math.max(0, CONFIG.MEMBERS-n)}, ()=>`<div class="av empty"><div class="c">?</div><div class="n">대기</div></div>`).join('');
+
+  if (!n){
+    $app.innerHTML = `<h2>결과</h2><div class="count">0<span>/${CONFIG.MEMBERS}</span></div><p class="sub">아직 아무도 안 냈어요</p><div class="avatars">${avs}</div>`;
+    setNav(`<button class="btn primary" data-act="start">참여하기</button>`); return;
   }
-  const areas = (r.areas||[]).slice().sort((a,b)=>b.score-a.score);
-  const pct = v => Math.max(0, Math.min(100, Number(v)||0));
+
   $app.innerHTML = `
-    <div class="result-top"><div class="k">26 · 서울 1박 2일</div><h2 style="margin-top:6px">${esc(r.summary||'')}</h2></div>
-    <div class="card"><h3>동네 궁합</h3>
-      ${areas.map(a=>`<div class="area"><div class="top"><span>${esc(a.name)}</span><span>${pct(a.score)}</span></div>
-        <div class="meter"><i style="width:${pct(a.score)}%"></i></div><div class="why">${esc(a.reason)}</div></div>`).join('')}
+    <div class="result-top"><div class="k">${done ? '최종 집계' : '중간 집계'} · ${n}/${CONFIG.MEMBERS}명</div>
+      <h2 style="margin-top:6px">1등끼리 조립한 일정</h2></div>
+    ${done ? '' : `<div class="avatars" style="margin:14px 0">${avs}</div>`}
+    <div class="card">${timelineHTML(ans)}</div>
+    ${matchHTML(n)}
+    ${wishesHTML(ans)}
+    <details class="card"><summary>칸별 득표</summary>
+      ${Object.keys(Q).filter(k=>k!=='never').map(k=>`<div class="q-sec"><h4>${Q[k].label}</h4>${barsHTML(k, ans)}</div>`).join('')}
+    </details>
+    <p class="sub" style="text-align:center;margin-top:16px">동점은 ‘또는’으로 표시. 단톡에서 택1</p>`;
+  setNav(`<button class="btn text" data-act="start">${A.nickname?'수정':'참여'}</button>
+          <button class="btn primary" data-act="go-result">새로고침</button>`);
+}
+
+function tally(k, ans){
+  const c = {}; Q[k].opts.forEach(o=>c[o]=0);
+  ans.forEach(a=>{ const v=a[k]; (Array.isArray(v)?v:[v]).forEach(x=>{ if (x in c) c[x]++; }); });
+  return Q[k].opts.map(o=>({o, n:c[o], veto:vetoers(o, ans)})).sort((a,b)=>b.n-a.n);
+}
+function vetoers(o, ans){ return ans.filter(a=>(a.never||[]).includes(o)).map(a=>a.nickname); }
+
+// 상위 take개 + 마지막 순위와 동점인 것까지
+function topOf(k, ans, take=1){
+  const t = tally(k, ans).filter(x=>x.n>0);
+  if (!t.length) return {main:[], tie:[], all:t};
+  const cut = t[Math.min(take, t.length)-1].n;
+  const main = t.filter(x=>x.n>cut);
+  const tie = t.filter(x=>x.n===cut);
+  return {main, tie, need: take - main.length, all:t};
+}
+function slotValue(k, ans, take=1){
+  const r = topOf(k, ans, take);
+  if (!r.all.length) return {html:'—', warn:''};
+  const show = o => esc(Q[k].show ? Q[k].show[o] : o);
+  let parts = r.main.map(x=>show(x.o));
+  if (r.need>0){
+    if (r.tie.length <= r.need) parts = parts.concat(r.tie.map(x=>show(x.o)));
+    else parts.push(r.tie.map(x=>show(x.o)).join(' <span class="or">또는</span> '));
+  }
+  const picked = r.main.concat(r.tie);
+  const warn = picked.filter(x=>x.veto.length).map(x=>`${show(x.o)} 싫다: ${x.veto.map(esc).join(', ')}`);
+  let alt = '';
+  if (warn.length){
+    const a = r.all.find(x=>!x.veto.length && !picked.includes(x));
+    if (a) alt = ` → 대안 ${show(a.o)}`;
+  }
+  return {html: parts.join(', '), warn: warn.length ? warn.join(' · ') + alt : ''};
+}
+
+function timelineHTML(ans){
+  const slot = (k, label, take=1, note='') => {
+    const v = slotValue(k, ans, take);
+    return `<div class="slot"><div class="k">${label}</div><div class="v">${v.html}
+      ${note?`<div class="note">${note}</div>`:''}${v.warn?`<div class="warn">${v.warn}</div>`:''}</div></div>`;
+  };
+  // 자유시간
+  const y = ans.filter(a=>a.free==='Y').length, nn = ans.filter(a=>a.free==='N').length;
+  const freeRow = y>nn ? `<div class="slot"><div class="k">자유시간</div><div class="v">1~2시간 각자<div class="note">찬성 ${y} · 반대 ${nn}</div></div></div>`
+    : y===nn && y>0 ? `<div class="slot"><div class="k">자유시간</div><div class="v">할까 말까 <span class="or">동점</span><div class="note">찬성 ${y} · 반대 ${nn}</div></div></div>` : '';
+  // 카페
+  const cafeTop = topOf('cafe', ans).all[0];
+  const cafeRow = cafeTop && cafeTop.o==='패스' ? '' : slot('cafe','카페');
+  // 차수
+  const rn = ans.map(a=>ROUND_N[a.rounds]||2);
+  let main = 2;
+  for (let k=2;k<=5;k++) if (rn.filter(x=>x>=k).length*2 > rn.length) main = k;
+  const extra = [];
+  for (let k=main+1;k<=5;k++){ const c = rn.filter(x=>x>=k).length; if (c) extra.push(`${k===5?'끝까지':k+'차 가능'} ${c}명`); }
+  const chain = tally('after', ans).filter(x=>x.n>0);
+  const chainTxt = [];
+  for (let i=0;i<main-1;i++) chainTxt.push(`${i+2}차 ${chain[i] ? esc(chain[i].o) : '자유'}`);
+  const afterWarn = chain.slice(0, main-1).filter(x=>x.veto.length).map(x=>`${esc(x.o)} 싫다: ${x.veto.map(esc).join(', ')}`).join(' · ');
+  const afterRow = `<div class="slot"><div class="k">2차 이후</div><div class="v">${chainTxt.join(' → ')}
+    <div class="note">본 일정 ${main}차까지${extra.length ? ` · 옵션 ${extra.join(', ')}` : ''}</div>
+    ${afterWarn?`<div class="warn">${afterWarn}</div>`:''}</div></div>`;
+  const bf = topOf('breakfast', ans).all[0];
+
+  return `<div class="tl">
+    <div class="day">DAY 1</div>
+    ${slot('meet','집결')}
+    ${slot('lunch','점심')}
+    ${slot('day','하고 싶은 거',2)}
+    ${cafeRow}
+    ${freeRow}
+    ${slot('rest','휴식',1,'숙소가 가까워서 짐 두고 쉬기 가능')}
+    ${slot('dinner','저녁 1차')}
+    ${afterRow}
+    <div class="day">DAY 2</div>
+    ${slot('wake','기상')}
+    ${bf && bf.o==='패스' ? '' : slot('breakfast','아침')}
+    ${slot('bye','해산')}
+  </div>`;
+}
+
+function barsHTML(k, ans){
+  const t = tally(k, ans), max = Math.max(1, ...t.map(x=>x.n));
+  const show = o => esc(Q[k].show ? Q[k].show[o] : o);
+  return `<div class="bars">${t.map((x,i)=>`
+    <div class="b ${i===0&&x.n>0?'top':''} ${x.veto.length?'veto':''}">
+      <span class="bl">${show(x.o)}${x.veto.length?` · 싫다 ${x.veto.length}`:''}</span><span class="bn">${x.n}</span>
+      <span class="bm"><i style="width:${x.n/max*100}%"></i></span></div>`).join('')}</div>`;
+}
+
+function matchHTML(n){
+  const m = DATA.match;
+  if (!m) return `<div class="card"><h3>케미 리포트</h3><p class="sub">${CONFIG.MEMBERS}명 다 모이면 공개돼요 (${n}/${CONFIG.MEMBERS})</p></div>`;
+  const pair = (p, cls) => `<div class="pair ${cls}">
+      <span class="who2">${esc(p.ac)} ${esc(p.a)} × ${esc(p.bc)} ${esc(p.b)}</span><span class="sc">${p.score}<small>%</small></span>
+      <span class="rs">${(p.why||[]).map(esc).join(' · ') || '은근 비슷'}</span></div>`;
+  return `<div class="card"><h3>케미 리포트</h3>
+      <div class="ptitle">🤝 텔레파시 통하는 사이</div>${(m.best||[]).map(p=>pair(p,'hot')).join('')}
+      ${m.worst ? `<div class="ptitle">⚡ N극과 S극</div>${pair(m.worst,'cold')}` : ''}
     </div>
-    ${(r.plans||[]).map(p=>`<div class="card plan">
-      <h3>${esc(p.title)}</h3><div class="where">${esc(p.area)} — ${esc(p.stay)}</div>
-      <div class="day">DAY 1</div><ul>${(p.day1||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
-      <div class="day">DAY 2</div><ul>${(p.day2||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
-      ${(p.fits||[]).map(f=>`<span class="tag">${esc(f)}</span>`).join('')}
-    </div>`).join('')}
-    ${list('다들 원하는 것', r.consensus, x=>esc(x))}
-    ${list('갈리는 부분', r.conflicts, x=>`<b>${esc(x.topic)}</b> ${esc(x.detail)}`)}
-    ${list('놓치면 안 되는 의견', r.minority, x=>`<b>${esc(x.nickname)}</b> ${esc(x.point)}`)}
-    <p class="sub" style="text-align:center;margin-top:20px">최종 결정은 투표로</p>`;
-  setNav(`<button class="btn primary" data-act="go-roll">현황으로</button>`);
+    <div class="card"><h3>따로 또 같이</h3><p class="sub">혹시 자유시간 한다면, 케미 좋은 사람끼리</p>
+      <div class="seg split" role="group" aria-label="나누기">
+        <button data-act="split" data-val="trios" aria-pressed="${split==='trios'}">3명씩</button>
+        <button data-act="split" data-val="duos" aria-pressed="${split==='duos'}">2명씩</button>
+      </div>
+      <div class="groups" id="groups">${groupsHTML()}</div>
+    </div>`;
+}
+
+function groupsHTML(){
+  const gs = (DATA.match && DATA.match[split]) || [];
+  return gs.map(g=>`<div class="grp">
+      <div class="gh"><span class="gn">${esc(g.emoji)} ${esc(g.name)}</span><span class="gs">케미 ${g.score}%</span></div>
+      <div class="gm">${g.members.map(x=>`<span>${esc(x.char)} ${esc(x.nick)}</span>`).join('')}</div>
+      ${g.common && g.common.length ? `<div class="gc">통하는 거: ${g.common.map(esc).join(', ')}</div>` : ''}
+    </div>`).join('');
+}
+
+function wishesHTML(ans){
+  const rows = ans.filter(a=>a.must || a.neverEtc || (a.never||[]).length).map(a=>{
+    const bits = [];
+    if (a.must) bits.push(`꼭: ${esc(a.must)}`);
+    const nv = (a.never||[]).concat(a.neverEtc ? [a.neverEtc] : []);
+    if (nv.length) bits.push(`<span style="color:var(--red)">싫다: ${nv.map(esc).join(', ')}</span>`);
+    return `<div class="wish"><b>${esc(a.character||'')} ${esc(a.nickname)}</b>${bits.join(' · ')}</div>`;
+  });
+  return rows.length ? `<div class="card"><h3 style="margin-bottom:6px">꼭 / 절대 싫다</h3>${rows.join('')}</div>` : '';
 }
 
 /* ================= 헬퍼 ================= */
-function rows(items, key, multi){
-  return `<div class="group">${items.map(it=>{
-    const on = multi ? A[key].includes(it.v) : A[key]===it.v;
-    return `<button class="row" data-act="pick" data-key="${key}" data-val="${esc(it.v)}" data-multi="${multi}" aria-pressed="${on}">
-      <div class="main"><div class="t">${it.t}</div>${it.d?`<div class="d">${it.d}</div>`:''}</div><span class="check">✓</span></button>`;
-  }).join('')}</div>`;
-}
-function list(title, arr, fn){
-  if (!arr || !arr.length) return '';
-  return `<div class="card"><h3 style="margin-bottom:8px">${title}</h3><ul>${arr.map(x=>`<li>${fn(x)}</li>`).join('')}</ul></div>`;
+function stepOk(){
+  const s = STEPS[step];
+  if (s.who) return !!(A.nickname.trim() && A.character);
+  return s.keys.every(k => k==='never' || (Q[k].type==='multi' ? A[k].length>0 : !!A[k]));
 }
 function setNav(html){ $navIn.innerHTML = html; $nav.hidden = !html; }
 function esc(s){ return String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function refreshNext(){
-  const btn = $navIn.querySelector('[data-act="next"]');
-  if (btn) btn.disabled = !STEPS[step].ok();
+  const b = $navIn.querySelector('[data-act="next"]'); if (b) b.disabled = !stepOk();
   const h = document.getElementById('hint'); if (h) h.textContent = '';
 }
 
 /* ================= API ================= */
-async function api(action, body){
-  if (demo) return demoApi(action, body);
-  if (body){
-    const res = await fetch(CONFIG.SCRIPT_URL, {
-      method:'POST',
-      headers:{'Content-Type':'text/plain;charset=utf-8'}, // preflight 회피
-      body: JSON.stringify(body)
-    });
-    const j = await res.json();
-    if (!j.ok) throw new Error(j.error||'저장 실패');
-    return true;
-  }
-  const res = await fetch(`${CONFIG.SCRIPT_URL}?action=${action}`);
+async function load(){
+  if (demo){ await new Promise(r=>setTimeout(r,250)); DATA = {members:DEMO.members, answers:DEMO.answers, match: DEMO.answers.length>=CONFIG.MEMBERS ? DEMO.match : null}; return; }
+  const res = await fetch(`${CONFIG.SCRIPT_URL}?action=round2`);
   const j = await res.json();
-  if (!j.ok) throw new Error(j.error||'불러오기 실패');
-  return action==='status' ? j.members : j.result;
+  if (!j.ok) throw new Error(j.error || '불러오기 실패');
+  DATA = {members:j.members||[], answers:j.answers||[], match:j.match||null};
 }
-async function demoApi(action, body){
-  await new Promise(r=>setTimeout(r,300));
-  if (body){
-    const i = demoStore.findIndex(m=>m.nickname===body.nickname);
-    const rec = {nickname:body.nickname, character:body.character};
-    if (i>=0) demoStore[i]=rec; else demoStore.push(rec);
-    return true;
+async function submit(){
+  const body = {...A, round:2, nickname:A.nickname.trim(), submittedAt:new Date().toISOString()};
+  if (demo){
+    await new Promise(r=>setTimeout(r,300));
+    const i = DEMO.answers.findIndex(a=>a.nickname===body.nickname);
+    if (i>=0) DEMO.answers[i]=body; else DEMO.answers.push(body);
+    return;
   }
-  return action==='status' ? demoStore : null;
+  const res = await fetch(CONFIG.SCRIPT_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(body)});
+  const j = await res.json();
+  if (!j.ok) throw new Error(j.error || '저장 실패');
 }
 
 /* ================= 이벤트 ================= */
 document.addEventListener('click', async e=>{
-  const el = e.target.closest('[data-act]');
-  if (!el) return;
+  const el = e.target.closest('[data-act]'); if (!el) return;
   const act = el.dataset.act;
 
-  if (act==='start' || act==='edit'){ view='form'; step=0; render(); return; }
-  if (act==='go-roll'){ view='roll'; render(); return; }
+  if (act==='start'){
+    view='form'; step=0; render(); return;
+  }
   if (act==='go-result'){ view='result'; render(); return; }
   if (act==='back'){ if (step===0) view='intro'; else step--; render(); return; }
 
   if (act==='next'){
-    const s = STEPS[step];
-    if (!s.ok()){ document.getElementById('hint').textContent = s.why||''; return; }
+    if (!stepOk()){ document.getElementById('hint').textContent='골라주세요'; return; }
     if (step < STEPS.length-1){ step++; render(); return; }
     el.disabled = true; el.textContent = '보내는 중';
-    try{
-      await api('submit', {...A, nickname:A.nickname.trim(), submittedAt:new Date().toISOString()});
-      view='done'; render();
-    }catch(err){
-      el.disabled = false; el.textContent = '제출';
-      document.getElementById('hint').textContent = `저장 실패: ${err.message}`;
-    }
+    try { await submit(); view='done'; render(); }
+    catch(err){ el.disabled=false; el.textContent='제출'; document.getElementById('hint').textContent=`저장 실패: ${err.message}`; }
     return;
   }
 
@@ -502,35 +613,36 @@ document.addEventListener('click', async e=>{
     refreshNext(); return;
   }
   if (act==='pick'){
-    const key = el.dataset.key, v = el.dataset.val, multi = el.dataset.multi==='true';
-    if (multi){
-      let arr = A[key];
-      if (v==='상관없음') arr = arr.includes(v) ? [] : [v];
-      else { arr = arr.filter(x=>x!=='상관없음'); arr = arr.includes(v) ? arr.filter(x=>x!==v) : [...arr, v]; }
-      A[key] = arr;
-      el.parentElement.querySelectorAll('.row').forEach(b=>b.setAttribute('aria-pressed', arr.includes(b.dataset.val)));
+    const k = el.dataset.key, v = el.dataset.val, q = Q[k];
+    if (q.type==='multi'){
+      if (A[k].includes(v)) A[k] = A[k].filter(x=>x!==v);
+      else if (A[k].length < q.max) A[k] = [...A[k], v];
+      else { document.getElementById('hint').textContent = `${q.label}은 ${q.max}개까지`; return; }
+      el.parentElement.querySelectorAll('.row').forEach(b=>b.setAttribute('aria-pressed', A[k].includes(b.dataset.val)));
     } else {
-      A[key] = v;
+      A[k] = v;
       el.parentElement.querySelectorAll('.row').forEach(b=>b.setAttribute('aria-pressed', b===el));
     }
     refreshNext(); return;
   }
-  if (act==='tri' || act==='rate'){
-    if (act==='tri') A.stayTypes[el.dataset.key] = el.dataset.val;
-    else A.activities[el.dataset.key] = Number(el.dataset.val);
+  if (act==='split'){
+    split = el.dataset.val;
     el.parentElement.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed', b===el));
-    if (act==='rate'){
-      const left = ACTIVITIES.filter(a=>!A.activities[a.v]).length;
-      document.getElementById('left').textContent = left ? `${left}개 남음` : '완료';
-      refreshNext();
-    }
+    document.getElementById('groups').innerHTML = groupsHTML(); return;
+  }
+  if (act==='never'){
+    const v = el.dataset.val;
+    A.never = A.never.includes(v) ? A.never.filter(x=>x!==v) : [...A.never, v];
+    el.setAttribute('aria-pressed', A.never.includes(v)); return;
   }
 });
 
 document.addEventListener('input', e=>{
-  if (e.target.id==='nick') A.nickname = e.target.value;
-  if (e.target.id==='must') A.mustDo = e.target.value;
-  if (e.target.id==='nope') A.dislike = e.target.value;
+  if (e.target.id==='nick'){
+    A.nickname = e.target.value;
+  }
+  if (e.target.id==='must') A.must = e.target.value;
+  if (e.target.id==='neverEtc') A.neverEtc = e.target.value;
   refreshNext();
 });
 
