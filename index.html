@@ -247,7 +247,11 @@ const CONFIG = {
 const Q = {
   meet:     {label:'집결', type:'one', opts:['11시','12시','13시','14시']},
   lunch:    {label:'점심', type:'multi', max:2, opts:['한식','중식','일식','양식','시장 먹거리','분식']},
-  day:      {label:'하고 싶은 거', type:'multi', max:2, opts:['경복궁','미술관·전시','골목 산책','소품샵','인왕산 산책','네컷·사진']},
+  day:      {label:'하고 싶은 거', type:'multi', max:3,
+             opts:['경복궁','미술관·전시','골목 산책','북촌·삼청동','수성동 계곡·인왕산','광화문·청계천',
+                   '소품샵','독립서점·책방','원데이 클래스','방탈출','오락실·인형뽑기','네컷·사진'],
+             desc:{'경복궁':'한복 입으면 입장 무료','미술관·전시':'국립현대미술관 서울관 등','골목 산책':'서촌 골목',
+                   '원데이 클래스':'반지, 향수, 도자기 공방','수성동 계곡·인왕산':'서촌 안쪽, 조용함'}},
   cafe:     {label:'카페', type:'one', opts:['꼭 가자','한 곳만','패스']},
   free:     {label:'자유시간', type:'one', opts:['Y','N'], show:{Y:'있으면 좋겠다', N:'계속 다 같이'}},
   rest:     {label:'휴식', type:'one', opts:['숙소에서 쉬기','카페로 대체','필요 없음']},
@@ -259,7 +263,7 @@ const Q = {
   bye:      {label:'해산', type:'one', opts:['13시','15시','17시']},
   never:    {label:'절대 싫다', type:'multi', max:99, groups:{
               '음식':['한식','중식','일식','양식','분식','고기','해산물','이자카야','매운 거','느끼한 거'],
-              '활동':['경복궁','미술관·전시','인왕산 산책','소품샵','루프탑'],
+              '활동':['경복궁','미술관·전시','수성동 계곡·인왕산','방탈출','루프탑'],
               '기타':['웨이팅','언덕','붐비는 곳']}}
 };
 const CHARS = ['🐻','🐰','🦊','🐸','🐱','🐶','🐼','🐧','🐹','🐯','🐥','🦦'];
@@ -269,7 +273,7 @@ const STEPS = [
   {title:'누구야', keys:[], who:true},
   {title:'몇 시에 모일까', keys:['meet']},
   {title:'점심 뭐 먹지', sub:'2개까지', keys:['lunch']},
-  {title:'하고 싶은 거', sub:'2개까지', keys:['day','cafe']},
+  {title:'하고 싶은 거', sub:'3개까지', keys:['day','cafe']},
   {title:'쉬어 가기', keys:['free','rest']},
   {title:'저녁 1차', sub:'2개까지', keys:['dinner']},
   {title:'그 다음', sub:'3개까지', keys:['after','rounds']},
@@ -330,7 +334,7 @@ function renderIntro(){
       <div class="row"><div class="main"><div class="t">마감</div></div><div class="val">${esc(CONFIG.DEADLINE)}</div></div>
       <div class="row"><div class="main"><div class="t">소요</div></div><div class="val">2분</div></div>
     </div>
-    <p class="sub" style="margin:0 16px">‘이번에도 잘 골라보시오'.</p>`;
+    <p class="sub" style="margin:0 16px">‘절대 싫다’로 고른 건 표가 많아도 빨갛게 표시돼요.</p>`;
   setNav(`<button class="btn text" data-act="go-result">결과</button>
           <button class="btn primary" data-act="start">시작하기</button>`);
 }
@@ -357,7 +361,7 @@ function renderForm(){
 }
 
 function whoHTML(){
-  return `<p class="sub">새 닉네임 OK.</p>
+  return `<p class="sub">새 닉네임 OK. 같은 닉네임으로 다시 내면 수정돼요</p>
     <div class="field"><input id="nick" type="text" maxlength="12" autocomplete="off" value="${esc(A.nickname)}" placeholder="닉네임"></div>
     <div class="chars">${CHARS.map(c=>`<button class="char" data-act="char" data-val="${c}" aria-pressed="${A.character===c}" aria-label="${c}">${c}</button>`).join('')}</div>`;
 }
@@ -368,8 +372,9 @@ function rowsHTML(k){
   return `<div class="group">${q.opts.map(o=>{
     const on = multi ? A[k].includes(o) : A[k]===o;
     const t = q.show ? q.show[o] : o;
+    const d = q.desc && q.desc[o];
     return `<button class="row" data-act="pick" data-key="${k}" data-val="${esc(o)}" aria-pressed="${on}">
-      <div class="main"><div class="t">${esc(t)}</div></div><span class="check">✓</span></button>`;
+      <div class="main"><div class="t">${esc(t)}</div>${d?`<div class="d">${esc(d)}</div>`:''}</div><span class="check">✓</span></button>`;
   }).join('')}</div>`;
 }
 
