@@ -576,7 +576,7 @@ function placesHTML(){
   const cats = [];
   ps.forEach(p=>{ if (!cats.includes(p.cat)) cats.push(p.cat); });
   const cnt = p => (DATA.likes[p.name]||[]).length;
-  return `<div class="card" id="places"><h3>${esc(CONFIG.PICK_TITLE)}</h3><p class="sub">아는 집 모아둠. 가고 싶으면 👍</p>
+  return `<div class="card" id="places"><h3>${esc(CONFIG.PICK_TITLE)}</h3><p class="sub">일단 검색 해봄. 가고 싶으면 👍</p>
     ${cats.map(c=>`<div class="ptitle">${esc(c)}</div>
       ${ps.map((p,i)=>({p,i})).filter(x=>x.p.cat===c).sort((x,y)=>cnt(y.p)-cnt(x.p) || x.i-y.i).map(({p})=>placeRow(p)).join('')}`).join('')}
     <div class="hint" id="likeHint" style="margin:8px 0 0"></div>
