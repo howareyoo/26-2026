@@ -442,8 +442,7 @@ async function renderResult(){
 
   if (!n){
     $app.innerHTML = `<h2>결과</h2><div class="count">0<span>/${CONFIG.MEMBERS}</span></div><p class="sub">아직 아무도 안 냈어요</p><div class="avatars">${avs}</div>`;
-      setNav(`${CONFIG.CLOSED ? '' : `<button class="btn text" data-act="start">${A.nickname?'수정':'참여'}</button>`}
-          <button class="btn primary" data-act="go-result">새로고침</button>`);
+    setNav(`<button class="btn primary" data-act="go-result">새로고침</button>`); return;
   }
 
   $app.innerHTML = `
@@ -458,7 +457,7 @@ async function renderResult(){
     </details>
     ${placesHTML()}
     <p class="sub" style="text-align:center;margin-top:16px">동점은 ‘또는’으로 표시. 단톡에서 택1</p>`;
-  setNav(`<button class="btn text" data-act="start">${A.nickname?'수정':'참여'}</button>
+  setNav(`${CONFIG.CLOSED ? '' : `<button class="btn text" data-act="start">${A.nickname?'수정':'참여'}</button>`}
           <button class="btn primary" data-act="go-result">새로고침</button>`);
 }
 
