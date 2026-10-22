@@ -238,6 +238,14 @@ details.card[open] summary::after{content:"–"}
 .place .go{font-size:.8rem;font-weight:600;color:var(--accent);margin-left:4px}
 .place .pw{font-size:.8rem;color:var(--secondary);margin-top:4px}
 a.main:active{opacity:.6}
+.top5{background:var(--fill);border-radius:12px;padding:6px 14px;margin:14px 0 6px}
+.t5{display:flex;align-items:center;gap:12px;padding:8px 0}
+.t5+.t5{border-top:1px solid var(--sep)}
+.t5 .rk{width:18px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--secondary)}
+.t5:first-child .rk{color:var(--accent)}
+.t5 .tn{flex:1;min-width:0;font-weight:600}
+.t5 .tn small{font-weight:500;color:var(--secondary);font-size:.8rem;margin-left:6px}
+.t5 .tc{font-size:.85rem;font-weight:600;font-variant-numeric:tabular-nums}
 .like{all:unset;cursor:pointer;flex:none;display:flex;align-items:center;gap:4px;padding:7px 11px;border-radius:999px;
   background:var(--fill);font-size:1rem;filter:grayscale(1);transition:filter .15s}
 .like span{font-size:.85rem;font-weight:600;font-variant-numeric:tabular-nums;min-width:.6em}
@@ -255,9 +263,9 @@ const CONFIG = {
   MEMBERS: 6,
   DEADLINE: '10월 22일',
   STAY: '서촌 사직로9길 · 경복궁 근처',
-  PICK_TITLE: 'ㅎㅈ 참고 리스트'      // 결과 맨 아래 가게 목록 카드 제목
+  PICK_TITLE: 'ㅎㅈ 참고 리스트',      // 결과 맨 아래 가게 목록 카드 제목
+  CLOSED: true
 };
- 
 
 /* ================= 문항 ================= */
 const Q = {
@@ -302,7 +310,7 @@ const SUBS = {
 const blank = () => ({nickname:'', character:'', meet:'', lunch:[], day:[], cafe:'', free:'', rest:'',
   dinner:[], after:[], rounds:'', wake:'', breakfast:'', bye:'', cantEat:'', must:''});
 let A = blank();
-let view = 'intro', step = 0;
+let view = CONFIG.CLOSED ? 'result' : 'intro', step = 0;
 let DATA = {members:[], answers:[], match:null, places:[], likes:{}};
 const ME_KEY = 'plan26_me';
 function getMe(){ try { return JSON.parse(localStorage.getItem(ME_KEY)) || null; } catch(_) { return null; } }
@@ -434,7 +442,8 @@ async function renderResult(){
 
   if (!n){
     $app.innerHTML = `<h2>결과</h2><div class="count">0<span>/${CONFIG.MEMBERS}</span></div><p class="sub">아직 아무도 안 냈어요</p><div class="avatars">${avs}</div>`;
-    setNav(`<button class="btn primary" data-act="start">참여하기</button>`); return;
+      setNav(`${CONFIG.CLOSED ? '' : `<button class="btn text" data-act="start">${A.nickname?'수정':'참여'}</button>`}
+          <button class="btn primary" data-act="go-result">새로고침</button>`);
   }
 
   $app.innerHTML = `
@@ -576,11 +585,28 @@ function placesHTML(){
   const cats = [];
   ps.forEach(p=>{ if (!cats.includes(p.cat)) cats.push(p.cat); });
   const cnt = p => (DATA.likes[p.name]||[]).length;
-  return `<div class="card" id="places"><h3>${esc(CONFIG.PICK_TITLE)}</h3><p class="sub">일단 검색 해봄. 가고 싶으면 👍 더 추가 될 예정</p>
+  return `<div class="card" id="places"><h3>${esc(CONFIG.PICK_TITLE)}</h3><p class="sub">참고용. 끌리면 👍</p>
+    <div id="likeTop">${likeTopHTML()}</div>
     ${cats.map(c=>`<div class="ptitle">${esc(c)}</div>
       ${ps.map((p,i)=>({p,i})).filter(x=>x.p.cat===c).sort((x,y)=>cnt(y.p)-cnt(x.p) || x.i-y.i).map(({p})=>placeRow(p)).join('')}`).join('')}
     <div class="hint" id="likeHint" style="margin:8px 0 0"></div>
   </div>`;
+}
+
+function likeTopHTML(){
+  const ranked = (DATA.places||[])
+    .map((p,i)=>({p, i, n:(DATA.likes[p.name]||[]).length}))
+    .filter(x=>x.n>0)
+    .sort((a,b)=>b.n-a.n || a.i-b.i)
+    .slice(0,5);
+  if (!ranked.length) return '';
+  let rank = 0, prev = null;
+  return `<div class="top5">${ranked.map((x,k)=>{
+      if (x.n!==prev){ rank = k+1; prev = x.n; }
+      return `<div class="t5"><span class="rk">${rank}</span>
+        <span class="tn">${esc(x.p.name)}<small>${esc(x.p.cat)}</small></span>
+        <span class="tc">👍 ${x.n}</span></div>`;
+    }).join('')}</div>`;
 }
 
 function placeRow(p){
@@ -708,6 +734,7 @@ document.addEventListener('click', async e=>{
     }
     const row = [...document.querySelectorAll('#places .like')].find(b=>b.dataset.place===place);
     if (row) row.closest('.place').outerHTML = placeRow(DATA.places.find(p=>p.name===place));
+    const top = document.getElementById('likeTop'); if (top) top.innerHTML = likeTopHTML();
     return;
   }
 });
