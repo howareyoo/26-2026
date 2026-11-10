@@ -247,7 +247,8 @@ a.main:active{opacity:.6}
 .mpin.on{background:var(--red);box-shadow:0 0 0 5px rgba(255,59,48,.25),0 1px 4px rgba(0,0,0,.35)}
 .mpin.on span{background:#1d1d1f;color:#fff}
 #map.far .mpin:not(.on) span{display:none}
-.mpin.stay{width:auto;height:auto;padding:3px 5px;border-radius:10px;background:#fff;font-size:1rem;line-height:1;cursor:default}
+.mpin.stay{width:auto;height:auto;padding:4px 8px 4px 6px;border-radius:10px;background:#fff;font-size:1rem;line-height:1;cursor:default;display:flex;align-items:center;gap:3px;white-space:nowrap}
+.mpin.stay b{font-size:12px;font-weight:700;color:#1d1d1f}
 .phead{display:flex;align-items:center;gap:8px;width:100%}
 .ptog{all:unset;cursor:pointer;flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;padding:2px 0}
 .ptog .psub{font-size:.8rem;color:var(--secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -599,7 +600,7 @@ function geoOf(p){ return p && p.lat && p.lng ? {lat:+p.lat, lng:+p.lng} : (p &&
 function placeDist(p){ const g = geoOf(p); return (STAY_GEO && g) ? distM(STAY_GEO, g) : null; }
 function distText(m){
   const walk = Math.max(1, Math.round(m*1.3/75));          // 골목 보정 1.3, 분속 75m
-  return `🏠 ${m<1000 ? Math.round(m/10)*10+'m' : (m/1000).toFixed(1)+'km'} · 도보 약 ${walk}분`;
+  return `🏠 숙소에서 ${m<1000 ? Math.round(m/10)*10+'m' : (m/1000).toFixed(1)+'km'} · 도보 약 ${walk}분`;
 }
 
 async function initMap(){
@@ -615,7 +616,7 @@ async function initMap(){
   MAP = new kakao.maps.Map(box, {center:new kakao.maps.LatLng(center.lat, center.lng), level:4});
   MAP_PINS = {};
   const bounds = new kakao.maps.LatLngBounds();
-  if (STAY_GEO){ makePin(STAY_GEO, '🏠', 'mpin stay'); bounds.extend(new kakao.maps.LatLng(STAY_GEO.lat, STAY_GEO.lng)); }
+  if (STAY_GEO){ makePin(STAY_GEO, '🏠<b>숙소</b>', 'mpin stay'); bounds.extend(new kakao.maps.LatLng(STAY_GEO.lat, STAY_GEO.lng)); }
   (DATA.places||[]).forEach(p=>{ const g = geoOf(p); if (g){ addPlacePin(p); bounds.extend(new kakao.maps.LatLng(g.lat, g.lng)); } });
   if (!bounds.isEmpty()) MAP.setBounds(bounds, 50, 40, 50, 40);
   // 많이 축소하면 이름 숨김 (선택한 곳은 계속 보임)
@@ -861,11 +862,17 @@ function placeRow(p, showCat){
       ${who.length ? `<div class="pw">👍 ${who.map(n=>`${esc(chars[n]||'')} ${esc(n)}`).join(' · ')}</div>` : ''}
       <div class="pf">
         <span class="pby">${esc(by)}</span>
-        ${p.link ? `<a class="go" href="${esc(p.link)}" target="_blank" rel="noopener">지도 앱에서 보기 ›</a>` : ''}
+        <a class="go" href="${esc(blogUrl(p))}" target="_blank" rel="noopener">블로그 후기 보기 ›</a>
         ${p.by && ME && p.by===ME.nickname ? `<button class="del" data-act="del" data-place="${esc(p.name)}">삭제</button>` : ''}
       </div>
     </div>` : ''}
   </div>`;
+}
+
+// 네이버 블로그 검색: 가게 이름 + 구 (예: '토속촌 종로구')
+function blogUrl(p){
+  const gu = ((p.addr||'').match(/\S+구(?=\s)/) || [''])[0];
+  return 'https://search.naver.com/search.naver?where=blog&query=' + encodeURIComponent((p.name + ' ' + gu).trim());
 }
 
 /* ---- 장소 추가 ---- */
