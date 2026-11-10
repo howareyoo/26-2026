@@ -250,10 +250,15 @@ a.main:active{opacity:.6}
 .mpin.stay{width:auto;height:auto;padding:4px 8px 4px 6px;border-radius:10px;background:#fff;font-size:1rem;line-height:1;cursor:default;display:flex;align-items:center;gap:3px;white-space:nowrap}
 .mpin.stay b{font-size:12px;font-weight:700;color:#1d1d1f}
 .phead{display:flex;align-items:center;gap:8px;width:100%}
-.ptog{all:unset;cursor:pointer;flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;padding:2px 0}
+.ptog{all:unset;cursor:pointer;flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:2px 0}
+.pth{flex:none;width:52px;height:52px;border-radius:10px;background:var(--fill);display:grid;place-items:center;font-size:1.5rem;overflow:hidden}
+.pth img{width:100%;height:100%;object-fit:cover;display:block}
+.ptx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.chev{flex:none;color:var(--secondary);font-size:1.3rem;line-height:1;transition:transform .15s;margin-left:-4px}
+.ptog[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.lbar{display:flex;justify-content:flex-end;margin:10px 0 -4px}
+.ltog{all:unset;cursor:pointer;color:var(--accent);font-size:.85rem;font-weight:600;padding:4px 2px}
 .ptog .psub{font-size:.8rem;color:var(--secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ptog .pn::after{content:"›";display:inline-block;margin-left:6px;color:var(--secondary);font-weight:500;transition:transform .15s}
-.ptog[aria-expanded="true"] .pn::after{transform:rotate(90deg)}
 .ptog:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
 .place{flex-direction:column;align-items:stretch}
 .pbody{padding:6px 0 2px}
@@ -262,7 +267,7 @@ a.main:active{opacity:.6}
 .pbody .pw{font-size:.82rem;color:var(--secondary);margin-top:6px}
 .pf{display:flex;align-items:center;gap:12px;margin-top:10px;font-size:.82rem}
 .pf .pby{color:var(--secondary);flex:1}
-.pf .go{color:var(--accent);font-weight:600;text-decoration:none;margin:0}
+.pf .go{all:unset;cursor:pointer;color:var(--accent);font-weight:600;text-decoration:none;margin:0}
 .del{all:unset;cursor:pointer;color:var(--red);font-weight:600}
 .addbtn{all:unset;cursor:pointer;display:block;width:100%;box-sizing:border-box;text-align:center;margin:12px 0 2px;padding:11px;border-radius:12px;
   border:1.5px dashed var(--sep);color:var(--accent);font-weight:600;font-size:.95rem}
@@ -325,7 +330,7 @@ const CONFIG = {
   MEMBERS: 6,
   DEADLINE: '10월 22일',
   STAY: '서촌 사직로9길 · 경복궁 근처',
-  PICK_TITLE: 'ㅎㅈ 업데이트',       // 첫 번째 탭 이름
+  PICK_TITLE: '장소',       // 첫 번째 탭 이름
   CLOSED: true,
   KAKAO_KEY: '956daf33cb4a93895178e0be0aed6337',              // 카카오 JavaScript 키. 비우면 지도·거리 숨김
   STAY_ADDR: '서울특별시 종로구 사직로7길 13-1 A동 102호'               // 숙소 주소. 예: '서울 종로구 사직로9길 00'
@@ -600,7 +605,7 @@ function geoOf(p){ return p && p.lat && p.lng ? {lat:+p.lat, lng:+p.lng} : (p &&
 function placeDist(p){ const g = geoOf(p); return (STAY_GEO && g) ? distM(STAY_GEO, g) : null; }
 function distText(m){
   const walk = Math.max(1, Math.round(m*1.3/75));          // 골목 보정 1.3, 분속 75m
-  return `🏠 숙소에서 ${m<1000 ? Math.round(m/10)*10+'m' : (m/1000).toFixed(1)+'km'} · 도보 약 ${walk}분`;
+  return `🏠 숙소 ${m<1000 ? Math.round(m/10)*10+'m' : (m/1000).toFixed(1)+'km'} · 도보 ${walk}분`;
 }
 
 async function initMap(){
@@ -798,6 +803,7 @@ function placesHTML(){
         <button data-act="sort" data-val="cat" aria-pressed="${placeSort==='cat'}">카테고리순</button>
         <button data-act="sort" data-val="near" aria-pressed="${placeSort==='near'}">숙소에서 가까운 순</button>
       </div>` : ''}
+    ${ps.length ? `<div class="lbar"><button class="ltog" data-act="open-all">${allOpen() ? '모두 접기' : '모두 펼치기'}</button></div>` : ''}
     <div id="placeList">${placeListHTML()}</div>
     <div class="hint" id="likeHint" style="margin:8px 0 0"></div>
   </div>`;
@@ -845,29 +851,48 @@ function placeRow(p, showCat){
   const chars = Object.fromEntries((DATA.answers||[]).map(a=>[a.nickname, a.character]));
   const open = OPEN.has(p.name);
   const d = placeDist(p);
-  const sub = [d!=null ? distText(d) : '', p.memo].filter(Boolean).join(' · ');
+  const dist = d!=null ? distText(d) : '';
   const by = p.by ? `${chars[p.by]||''} ${p.by} 추가` : 'ㅎㅈ';
   return `<div class="place" data-name="${esc(p.name)}">
     <div class="phead">
       <button class="ptog" data-act="toggle" data-place="${esc(p.name)}" aria-expanded="${open}">
-        <span class="pn">${esc(p.name)}${showCat?` <small class="pc">${esc(p.cat)}</small>`:''}${p.img?' <small class="pc">📷</small>':''}</span>
-        ${sub?`<span class="psub">${esc(sub)}</span>`:''}
+        <span class="pth" data-e="${catEmoji(p.cat)}">${p.img
+          ? `<img src="${esc(imgSrc(p.img))}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.textContent=this.parentNode.dataset.e">`
+          : catEmoji(p.cat)}</span>
+        <span class="ptx">
+          <span class="pn">${esc(p.name)}${showCat?` <small class="pc">${esc(p.cat)}</small>`:''}</span>
+          ${dist?`<span class="psub">${esc(dist)}</span>`:''}
+          ${p.memo?`<span class="psub">${esc(p.memo)}</span>`:''}
+        </span>
+        <span class="chev" aria-hidden="true">›</span>
       </button>
-      ${MAP && geoOf(p) ? `<button class="loc" data-act="loc" data-place="${esc(p.name)}" aria-label="지도에서 보기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg></button>` : ''}
       <button class="like" data-act="like" data-place="${esc(p.name)}" aria-pressed="${!!mine}" aria-label="좋아요">👍<span>${who.length||''}</span></button>
     </div>
     ${open ? `<div class="pbody">
       ${p.img ? `<img class="pimg" src="${esc(imgSrc(p.img))}" alt="${esc(p.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}
-      ${p.memo ? `<div class="pm">${esc(p.memo)}</div>` : ''}
+      ${p.memo && p.memo.length > 20 ? `<div class="pm">${esc(p.memo)}</div>` : ''}
       ${who.length ? `<div class="pw">👍 ${who.map(n=>`${esc(chars[n]||'')} ${esc(n)}`).join(' · ')}</div>` : ''}
       <div class="pf">
         <span class="pby">${esc(by)}</span>
-        <a class="go" href="${esc(blogUrl(p))}" target="_blank" rel="noopener">블로그 후기 보기 ›</a>
+        ${MAP && geoOf(p) ? `<button class="go" data-act="loc" data-place="${esc(p.name)}">📍 지도에서</button>` : ''}
+        <a class="go" href="${esc(blogUrl(p))}" target="_blank" rel="noopener">블로그 후기 ›</a>
         ${p.by && ME && p.by===ME.nickname ? `<button class="del" data-act="del" data-place="${esc(p.name)}">삭제</button>` : ''}
       </div>
     </div>` : ''}
   </div>`;
 }
+
+function catEmoji(c){
+  c = String(c||'');
+  if (/카페|디저트|커피/.test(c)) return '☕';
+  if (/아침|브런치/.test(c)) return '🥐';
+  if (/3차|바|와인|위스키/.test(c)) return '🍷';
+  if (/2차|술|맥주|막걸리|포차/.test(c)) return '🍺';
+  if (/저녁|고기/.test(c)) return '🍖';
+  if (/점심|한식|식사|밥/.test(c)) return '🍚';
+  return '📍';
+}
+function allOpen(){ const ps = DATA.places||[]; return ps.length>0 && ps.every(p=>OPEN.has(p.name)); }
 
 // 네이버 블로그 검색: 가게 이름 + 구 (예: '토속촌 종로구')
 function blogUrl(p){
@@ -1074,10 +1099,18 @@ document.addEventListener('click', async e=>{
     refreshPlaceList(); return;
   }
   if (act==='loc'){ selectPlace(el.dataset.place, false); return; }
+  if (act==='open-all'){
+    const open = !allOpen();
+    (DATA.places||[]).forEach(p=> open ? OPEN.add(p.name) : OPEN.delete(p.name));
+    el.textContent = open ? '모두 접기' : '모두 펼치기';
+    refreshPlaceList(); return;
+  }
   if (act==='toggle'){
     const n = el.dataset.place;
     OPEN.has(n) ? OPEN.delete(n) : OPEN.add(n);
-    replaceRow(el.closest('.place'), n); return;
+    replaceRow(el.closest('.place'), n);
+    const t = document.querySelector('[data-act="open-all"]'); if (t) t.textContent = allOpen() ? '모두 접기' : '모두 펼치기';
+    return;
   }
   if (act==='del'){ delPlace(el.dataset.place); return; }
   if (act==='add-open'){
