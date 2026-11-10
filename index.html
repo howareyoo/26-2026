@@ -239,6 +239,21 @@ details.card[open] summary::after{content:"–"}
 .place .pw{font-size:.8rem;color:var(--secondary);margin-top:4px}
 a.main:active{opacity:.6}
 .pimg{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;margin-top:14px;background:var(--fill)}
+.wcard{padding:16px 18px}
+.wtop{display:flex;justify-content:space-between;align-items:baseline}
+.wt{font-weight:700}
+.wsrc{font-size:.72rem;color:var(--secondary)}
+.wnow{display:flex;align-items:center;gap:12px;margin-top:8px}
+.wic{font-size:2.4rem;line-height:1}
+.wtemp{font-size:2rem;font-weight:700;letter-spacing:-0.03em;line-height:1}
+.wdesc{font-size:.85rem;color:var(--secondary);margin-top:4px}
+.wdays{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.wday{background:var(--fill);border-radius:12px;padding:10px 12px;text-align:center}
+.wdl{font-size:.78rem;font-weight:600;color:var(--secondary)}
+.wdi{font-size:1.6rem;margin-top:4px}
+.wdt{font-size:.82rem}
+.wdr{font-size:.9rem;margin-top:2px;font-variant-numeric:tabular-nums}
+.wdp{font-size:.78rem;color:var(--secondary);margin-top:2px}
 .mapcard{padding:6px}
 #map{height:280px;border-radius:13px;overflow:hidden;background:var(--fill)}
 .mpin{position:relative;width:14px;height:14px;border-radius:50%;background:var(--accent);border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);cursor:pointer}
@@ -333,7 +348,8 @@ const CONFIG = {
   PICK_TITLE: '장소',       // 첫 번째 탭 이름
   CLOSED: true,
   KAKAO_KEY: '956daf33cb4a93895178e0be0aed6337',              // 카카오 JavaScript 키. 비우면 지도·거리 숨김
-  STAY_ADDR: '서울특별시 종로구 사직로7길 13-1 A동 102호'               // 숙소 주소. 예: '서울 종로구 사직로9길 00'
+  STAY_ADDR: '서울특별시 종로구 사직로7길 13-1 A동 102호',              // 숙소 주소. 예: '서울 종로구 사직로9길 00'
+  TRIP_DAYS: ['2026-11-14', '2026-11-15']   // 날씨 카드에 보여줄 여행 날짜
 };
 
 /* ================= 문항 ================= */
@@ -529,7 +545,8 @@ function drawResult(){
 
   let body = '';
   if (tab==='places'){
-    body = placesHTML() || `<div class="card"><p class="sub" style="margin:0">아직 올린 곳이 없어요</p></div>`;
+    body = `<div class="card wcard" id="weather">${weatherHTML()}</div>`
+      + (placesHTML() || `<div class="card"><p class="sub" style="margin:0">아직 올린 곳이 없어요</p></div>`);
   } else if (tab==='plan'){
     body = n ? `${done ? '' : `<div class="avatars" style="margin:14px 0">${avs}</div>`}
       <div class="card">${timelineHTML(ans)}</div>
@@ -559,7 +576,57 @@ function drawResult(){
   $nav.hidden = false; $nav.classList.add('tabbed');
   window.scrollTo(0,0);
   MAP = null;
+  if (tab==='places') loadWeather();
   if (tab==='places' && useMap()) initMap();
+}
+
+/* ================= 날씨 (Open-Meteo, 키 없음) ================= */
+let WX = null, WX_ERR = '', wxLoading = null;
+const WX_CODE = {
+  0:['☀️','맑음'], 1:['🌤️','대체로 맑음'], 2:['⛅','구름 조금'], 3:['☁️','흐림'],
+  45:['🌫️','안개'], 48:['🌫️','안개'],
+  51:['🌦️','이슬비'], 53:['🌦️','이슬비'], 55:['🌦️','이슬비'], 56:['🌧️','어는 비'], 57:['🌧️','어는 비'],
+  61:['🌧️','비'], 63:['🌧️','비'], 65:['🌧️','강한 비'], 66:['🌧️','어는 비'], 67:['🌧️','어는 비'],
+  71:['🌨️','눈'], 73:['🌨️','눈'], 75:['❄️','많은 눈'], 77:['🌨️','싸락눈'],
+  80:['🌦️','소나기'], 81:['🌧️','소나기'], 82:['⛈️','강한 소나기'], 85:['🌨️','눈 소나기'], 86:['🌨️','눈 소나기'],
+  95:['⛈️','뇌우'], 96:['⛈️','뇌우·우박'], 99:['⛈️','뇌우·우박']
+};
+const wx = c => WX_CODE[c] || ['🌡️','—'];
+
+function loadWeather(){
+  if (WX) return;
+  if (!wxLoading){
+    const lat = 37.5780, lng = 126.9700;   // 서촌
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}`
+      + `&current=temperature_2m,apparent_temperature,weather_code`
+      + `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max`
+      + `&timezone=Asia%2FSeoul&forecast_days=16`;
+    wxLoading = fetch(url).then(r=>r.json()).then(j=>{ if (!j.daily) throw new Error('응답 이상'); WX = j; })
+      .catch(e=>{ WX_ERR = '날씨를 못 불러왔어요'; wxLoading = null; });
+  }
+  wxLoading.then(()=>{ const b = document.getElementById('weather'); if (b) b.innerHTML = weatherHTML(); });
+}
+
+function weatherHTML(){
+  if (!WX) return `<div class="wtop"><span class="wt">서촌 날씨</span></div><p class="sub" style="margin:6px 0 0">${WX_ERR || '불러오는 중'}</p>`;
+  const c = WX.current, d = WX.daily;
+  const [ic, txt] = wx(c.weather_code);
+  const days = (CONFIG.TRIP_DAYS||[]).filter(x=>d.time.includes(x));
+  const pick = days.length ? days : d.time.slice(0, 2);   // 여행 날짜가 예보 범위 밖이면 오늘·내일
+  const dow = ['일','월','화','수','목','금','토'];
+  const label = t => { const [y,m,dd] = t.split('-').map(Number); return `${m}/${dd} (${dow[new Date(Date.UTC(y,m-1,dd)).getUTCDay()]})`; };
+  return `<div class="wtop"><span class="wt">서촌 날씨</span><span class="wsrc">Open-Meteo</span></div>
+    <div class="wnow"><span class="wic">${ic}</span>
+      <div><div class="wtemp">${Math.round(c.temperature_2m)}°</div>
+      <div class="wdesc">${txt} · 체감 ${Math.round(c.apparent_temperature)}°</div></div></div>
+    <div class="wdays">${pick.map(t=>{
+      const i = d.time.indexOf(t), [di, dt] = wx(d.weather_code[i]);
+      const rain = d.precipitation_probability_max ? d.precipitation_probability_max[i] : null;
+      return `<div class="wday"><div class="wdl">${days.length ? '여행 ' : ''}${label(t)}</div>
+        <div class="wdi">${di}</div><div class="wdt">${dt}</div>
+        <div class="wdr"><b>${Math.round(d.temperature_2m_max[i])}°</b> / ${Math.round(d.temperature_2m_min[i])}°</div>
+        ${rain!=null ? `<div class="wdp">☔ ${rain}%</div>` : ''}</div>`;
+    }).join('')}</div>`;
 }
 
 /* ================= 지도 ================= */
