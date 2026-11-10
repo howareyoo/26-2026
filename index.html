@@ -870,6 +870,14 @@ function placeRow(p, showCat){
 /* ---- 장소 추가 ---- */
 function addHTML(){
   if (!ADD) return `<button class="addbtn" data-act="add-open">＋ 장소 추가</button>`;
+  if (ADD.who){
+    const people = (DATA.answers||[]).map(a=>({n:a.nickname, c:a.character}));
+    return `<div class="addp">
+      <div class="addh"><b>누구야?</b><button class="x" data-act="add-close">닫기</button></div>
+      <p class="sub" style="margin:4px 0 10px">${ADD.next==='like' ? '👍 누르기 전에' : '추가하기 전에'} 한 번만 골라줘. 이 폰에 기억해둘게</p>
+      <div class="chips" style="margin:0">${people.map(x=>`<button class="chip" data-act="me-pick" data-val="${esc(x.n)}" data-char="${esc(x.c)}">${esc(x.c)} ${esc(x.n)}</button>`).join('')}</div>
+    </div>`;
+  }
   const cats = [...new Set((DATA.places||[]).map(p=>p.cat).concat('기타'))];
   if (ADD.pick){
     const r = ADD.pick;
@@ -899,6 +907,10 @@ function addHTML(){
     <div class="hint" id="addHint" style="margin:6px 0 0">${esc(ADD.err||'')}</div>
   </div>`;
 }
+function openSearch(){
+  ADD = {q:'', results:null, pick:null, cat:'', memo:'', busy:false, err:''}; drawAdd();
+  const q = document.getElementById('addQ'); if (q) q.focus();
+}
 function drawAdd(){ const b = document.getElementById('addBox'); if (b) b.innerHTML = addHTML(); }
 
 async function addSearch(){
@@ -915,7 +927,7 @@ async function addSearch(){
 
 async function addSave(){
   const r = ADD.pick;
-  if (!ME){ ADD.err = '2차 설문 낸 폰에서 추가할 수 있어요'; drawAdd(); return; }
+  if (!ME){ ADD = {who:true, next:'add'}; drawAdd(); return; }
   if ((DATA.places||[]).some(p=>p.name===r.place_name)){ ADD.err = '이미 있는 곳이에요'; drawAdd(); return; }
   ADD.busy = true; ADD.err = ''; drawAdd();
   const body = {type:'addPlace', nickname:ME.nickname, name:r.place_name, cat:ADD.cat, memo:(ADD.memo||'').trim(),
@@ -1061,9 +1073,16 @@ document.addEventListener('click', async e=>{
   }
   if (act==='del'){ delPlace(el.dataset.place); return; }
   if (act==='add-open'){
-    if (!ME){ const h = document.getElementById('likeHint'); if (h) h.textContent = '2차 설문 낸 폰에서 추가할 수 있어요'; return; }
-    ADD = {q:'', results:null, pick:null, cat:'', memo:'', busy:false, err:''}; drawAdd();
-    const q = document.getElementById('addQ'); if (q) q.focus(); return;
+    if (!ME){ ADD = {who:true, next:'add'}; drawAdd(); return; }
+    openSearch(); return;
+  }
+  if (act==='me-pick'){
+    ME = {nickname:el.dataset.val, character:el.dataset.char}; setMe(ME);
+    const next = ADD && ADD.next, lp = ADD && ADD.likePlace;
+    refreshPlaceList();
+    if (next==='like' && lp){ ADD = null; drawAdd(); const b = [...document.querySelectorAll('#places .like')].find(x=>x.dataset.place===lp); if (b) b.click(); }
+    else openSearch();
+    return;
   }
   if (act==='add-close'){ ADD = null; drawAdd(); return; }
   if (act==='add-search'){ addSearch(); return; }
@@ -1088,7 +1107,12 @@ document.addEventListener('click', async e=>{
   if (act==='like'){
     const place = el.dataset.place;
     const hint = document.getElementById('likeHint');
-    if (!ME){ hint.textContent = '2차 설문 낸 폰에서 누를 수 있어요'; return; }
+    if (!ME){
+      if (document.getElementById('addBox')){ ADD = {who:true, next:'like', likePlace:place}; drawAdd();
+        document.getElementById('addBox').scrollIntoView({behavior:'smooth', block:'center'}); }
+      else hint.textContent = '2차 설문 낸 폰에서 누를 수 있어요';
+      return;
+    }
     const before = (DATA.likes[place]||[]).slice();
     const on = !before.includes(ME.nickname);
     DATA.likes[place] = on ? before.concat(ME.nickname) : before.filter(n=>n!==ME.nickname);
