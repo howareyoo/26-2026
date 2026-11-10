@@ -241,6 +241,19 @@ a.main:active{opacity:.6}
 .pimg{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;margin-top:14px;background:var(--fill)}
 .ptitle+.pimg{margin-top:10px}
 .place.has-img{border-top:none;padding-top:8px}
+.mapcard{padding:6px}
+#map{height:280px;border-radius:13px;overflow:hidden;background:var(--fill)}
+.mpin{width:14px;height:14px;border-radius:50%;background:var(--accent);border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);cursor:pointer;transition:transform .15s}
+.mpin.on{transform:scale(1.45);background:var(--red)}
+.mpin.stay{width:auto;height:auto;padding:3px 5px;border-radius:10px;background:#fff;font-size:1rem;line-height:1;cursor:default}
+.mlabel{background:#1d1d1f;color:#fff;font-size:.78rem;font-weight:600;padding:5px 9px;border-radius:8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.place .pd{font-size:.8rem;color:var(--secondary);margin-top:3px;font-variant-numeric:tabular-nums}
+.place .pc{font-size:.75rem;font-weight:500;color:var(--secondary);margin-left:2px}
+.place.flash{animation:flash 1.2s ease}
+@keyframes flash{0%,40%{background:color-mix(in srgb, var(--accent) 14%, transparent)}100%{background:transparent}}
+.loc{all:unset;cursor:pointer;flex:none;width:34px;height:34px;border-radius:50%;background:var(--fill);display:grid;place-items:center}
+.loc svg{width:17px;height:17px;fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.loc:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .rhead{display:flex;justify-content:space-between;align-items:flex-end;padding:3vh 0 4px}
 .rhead .k{font-size:.82rem;color:var(--secondary);font-weight:600}
 .rhead h2{margin-top:4px}
@@ -281,7 +294,9 @@ const CONFIG = {
   DEADLINE: '10월 22일',
   STAY: '서촌 사직로9길 · 경복궁 근처',
   PICK_TITLE: 'ㅎㅈ 업데이트',       // 첫 번째 탭 이름
-  CLOSED: true
+  CLOSED: true,
+  KAKAO_KEY: '956daf33cb4a93895178e0be0aed6337',              // 카카오 JavaScript 키. 비우면 지도·거리 숨김
+  STAY_ADDR: '서울특별시 종로구 사직로7길 13-1 A동 102호'               // 숙소 주소. 예: '서울 종로구 사직로9길 00'
 };
 
 /* ================= 문항 ================= */
@@ -506,6 +521,104 @@ function drawResult(){
       <svg viewBox="0 0 24 24" aria-hidden="true">${x.icon}</svg><span>${esc(x.label())}</span></button>`).join('')}</div>`;
   $nav.hidden = false; $nav.classList.add('tabbed');
   window.scrollTo(0,0);
+  MAP = null;
+  if (tab==='places' && useMap()) initMap();
+}
+
+/* ================= 지도 ================= */
+let placeSort = (()=>{ try { return localStorage.getItem('plan26_sort') || 'cat'; } catch(_) { return 'cat'; } })();
+const GEO = {};          // 주소 → {lat, lng} | null
+let STAY_GEO = null, MAP = null, MAP_PINS = {}, MAP_LABEL = null, kakaoReady = null;
+const useMap = () => !!CONFIG.KAKAO_KEY;
+
+function loadKakao(){
+  if (kakaoReady) return kakaoReady;
+  kakaoReady = new Promise((ok, fail)=>{
+    if (window.kakao && kakao.maps) return kakao.maps.load(ok);
+    const sc = document.createElement('script');
+    sc.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${encodeURIComponent(CONFIG.KAKAO_KEY)}&libraries=services&autoload=false`;
+    sc.onload = ()=> kakao.maps.load(ok);
+    sc.onerror = ()=> { kakaoReady = null; fail(new Error('카카오맵 로드 실패')); };
+    document.head.appendChild(sc);
+  });
+  return kakaoReady;
+}
+
+function geocode(addr){
+  if (!addr) return Promise.resolve(null);
+  if (addr in GEO) return Promise.resolve(GEO[addr]);
+  try { const c = JSON.parse(localStorage.getItem('plan26_geo') || '{}'); if (c[addr]) return Promise.resolve(GEO[addr] = c[addr]); } catch(_) {}
+  return new Promise(res=>{
+    new kakao.maps.services.Geocoder().addressSearch(addr, (r, st)=>{
+      const v = st === kakao.maps.services.Status.OK && r[0] ? {lat:+r[0].y, lng:+r[0].x} : null;
+      GEO[addr] = v;
+      if (v) try { const c = JSON.parse(localStorage.getItem('plan26_geo') || '{}'); c[addr] = v; localStorage.setItem('plan26_geo', JSON.stringify(c)); } catch(_) {}
+      res(v);
+    });
+  });
+}
+
+function distM(a, b){
+  const R = 6371000, rad = x => x*Math.PI/180;
+  const dLat = rad(b.lat-a.lat), dLng = rad(b.lng-a.lng);
+  const h = Math.sin(dLat/2)**2 + Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+function placeDist(p){ const g = GEO[p.addr]; return (STAY_GEO && g) ? distM(STAY_GEO, g) : null; }
+function distText(m){
+  const walk = Math.max(1, Math.round(m*1.3/75));          // 골목 보정 1.3, 분속 75m
+  return `🏠 ${m<1000 ? Math.round(m/10)*10+'m' : (m/1000).toFixed(1)+'km'} · 도보 약 ${walk}분`;
+}
+
+async function initMap(){
+  const box = document.getElementById('map');
+  if (!box) return;
+  try { await loadKakao(); }
+  catch(e){ box.outerHTML = `<p class="hint" style="margin:0">${esc(e.message)}. 도메인 등록·키 확인</p>`; return; }
+  STAY_GEO = await geocode(CONFIG.STAY_ADDR);
+  await Promise.all((DATA.places||[]).map(p=>geocode(p.addr)));
+  if (!document.getElementById('map')) return;           // 그새 탭 바뀜
+
+  const center = STAY_GEO || Object.values(GEO).find(Boolean) || {lat:37.5776, lng:126.9715};
+  MAP = new kakao.maps.Map(box, {center:new kakao.maps.LatLng(center.lat, center.lng), level:4});
+  MAP_PINS = {}; MAP_LABEL = null;
+  const bounds = new kakao.maps.LatLngBounds();
+  const pin = (g, html, cls, onClick)=>{
+    const el = document.createElement('div'); el.className = cls; el.innerHTML = html;
+    if (onClick) el.addEventListener('click', onClick);
+    new kakao.maps.CustomOverlay({map:MAP, position:new kakao.maps.LatLng(g.lat, g.lng), content:el, yAnchor:.5, xAnchor:.5});
+    bounds.extend(new kakao.maps.LatLng(g.lat, g.lng));
+    return el;
+  };
+  if (STAY_GEO) pin(STAY_GEO, '🏠', 'mpin stay');
+  (DATA.places||[]).forEach(p=>{
+    const g = GEO[p.addr]; if (!g) return;
+    MAP_PINS[p.name] = pin(g, '', 'mpin', ()=>selectPlace(p.name, true));
+  });
+  if (!bounds.isEmpty()) MAP.setBounds(bounds, 40, 30, 40, 30);
+  refreshPlaceList();
+}
+
+function selectPlace(name, fromMap){
+  const p = DATA.places.find(x=>x.name===name), g = p && GEO[p.addr];
+  if (!MAP || !g) return;
+  Object.values(MAP_PINS).forEach(el=>el.classList.remove('on'));
+  if (MAP_PINS[name]) MAP_PINS[name].classList.add('on');
+  if (MAP_LABEL) MAP_LABEL.setMap(null);
+  const el = document.createElement('div'); el.className = 'mlabel'; el.textContent = name;
+  MAP_LABEL = new kakao.maps.CustomOverlay({map:MAP, position:new kakao.maps.LatLng(g.lat, g.lng), content:el, yAnchor:1.9});
+  MAP.panTo(new kakao.maps.LatLng(g.lat, g.lng));
+  if (fromMap){
+    const row = [...document.querySelectorAll('#placeList .place')].find(r=>r.dataset.name===name);
+    if (row){ row.scrollIntoView({behavior:'smooth', block:'center'}); row.classList.add('flash'); setTimeout(()=>row.classList.remove('flash'), 1200); }
+  } else {
+    document.getElementById('map').scrollIntoView({behavior:'smooth', block:'center'});
+  }
+}
+
+function refreshPlaceList(){
+  const box = document.getElementById('placeList');
+  if (box) box.innerHTML = placeListHTML();
 }
 
 function imgSrc(u){
@@ -634,21 +747,36 @@ function groupsHTML(){
 function placesHTML(){
   const ps = DATA.places || [];
   if (!ps.length) return '';
-  const cats = [];
-  ps.forEach(p=>{ if (!cats.includes(p.cat)) cats.push(p.cat); });
-  const cnt = p => (DATA.likes[p.name]||[]).length;
-  return `<div class="card" id="places"><p class="sub" style="margin:0">참고용. 끌리면 👍</p>
+  const mapOn = useMap() && ps.some(p=>p.addr);
+  return `${mapOn ? `<div class="card mapcard"><div id="map"></div></div>` : ''}
+  <div class="card" id="places"><p class="sub" style="margin:0">참고용. 끌리면 👍</p>
     <div id="likeTop">${likeTopHTML()}</div>
-    ${cats.map(c=>`<div class="ptitle">${esc(c)}</div>
-      ${ps.map((p,i)=>({p,i})).filter(x=>x.p.cat===c).sort((x,y)=>cnt(y.p)-cnt(x.p) || x.i-y.i).map(({p})=>placeRow(p)).join('')}`).join('')}
+    ${mapOn ? `<div class="seg split" role="group" aria-label="정렬">
+        <button data-act="sort" data-val="cat" aria-pressed="${placeSort==='cat'}">카테고리순</button>
+        <button data-act="sort" data-val="near" aria-pressed="${placeSort==='near'}">숙소에서 가까운 순</button>
+      </div>` : ''}
+    <div id="placeList">${placeListHTML()}</div>
     <div class="hint" id="likeHint" style="margin:8px 0 0"></div>
   </div>`;
+}
+
+function placeListHTML(){
+  const ps = DATA.places || [];
+  const cnt = p => (DATA.likes[p.name]||[]).length;
+  if (useMap() && placeSort==='near' && STAY_GEO){
+    const list = ps.map((p,i)=>({p,i,d:placeDist(p)})).sort((x,y)=>(x.d??1e9)-(y.d??1e9) || x.i-y.i);
+    return list.map(({p})=>placeRow(p, true)).join('');
+  }
+  const cats = [];
+  ps.forEach(p=>{ if (!cats.includes(p.cat)) cats.push(p.cat); });
+  return cats.map(c=>`<div class="ptitle">${esc(c)}</div>
+    ${ps.map((p,i)=>({p,i})).filter(x=>x.p.cat===c).sort((x,y)=>cnt(y.p)-cnt(x.p) || x.i-y.i).map(({p})=>placeRow(p)).join('')}`).join('');
 }
 
 function replaceRow(rowEl, place){
   const prev = rowEl.previousElementSibling;
   if (prev && prev.classList.contains('pimg')) prev.remove();
-  rowEl.outerHTML = placeRow(DATA.places.find(p=>p.name===place));
+  rowEl.outerHTML = placeRow(DATA.places.find(p=>p.name===place), placeSort==='near' && !!STAY_GEO && useMap());
 }
 
 function likeTopHTML(){
@@ -667,16 +795,19 @@ function likeTopHTML(){
     }).join('')}</div>`;
 }
 
-function placeRow(p){
+function placeRow(p, showCat){
   const who = DATA.likes[p.name] || [];
   const mine = ME && who.includes(ME.nickname);
   const chars = Object.fromEntries((DATA.answers||[]).map(a=>[a.nickname, a.character]));
-  const inner = `<div class="pn">${esc(p.name)}${p.link?' <span class="go">지도 ›</span>':''}</div>
+  const d = placeDist(p);
+  const inner = `<div class="pn">${esc(p.name)}${showCat?` <small class="pc">${esc(p.cat)}</small>`:''}${p.link?' <span class="go">지도 ›</span>':''}</div>
     ${p.memo?`<div class="pm">${esc(p.memo)}</div>`:''}
+    ${d!=null?`<div class="pd">${distText(d)}</div>`:''}
     ${who.length?`<div class="pw">${who.map(n=>`${esc(chars[n]||'')} ${esc(n)}`).join(' · ')}</div>`:''}`;
   const pic = p.img ? `<img class="pimg" src="${esc(imgSrc(p.img))}" alt="${esc(p.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : '';
-  return `${pic}<div class="place${p.img?' has-img':''}">
+  return `${pic}<div class="place${p.img?' has-img':''}" data-name="${esc(p.name)}">
     ${p.link ? `<a class="main" href="${esc(p.link)}" target="_blank" rel="noopener">${inner}</a>` : `<div class="main">${inner}</div>`}
+    ${MAP && GEO[p.addr] ? `<button class="loc" data-act="loc" data-place="${esc(p.name)}" aria-label="지도에서 보기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg></button>` : ''}
     <button class="like" data-act="like" data-place="${esc(p.name)}" aria-pressed="${!!mine}" aria-label="좋아요">👍<span>${who.length||''}</span></button>
   </div>`;
 }
@@ -765,6 +896,13 @@ document.addEventListener('click', async e=>{
     }
     refreshNext(); return;
   }
+  if (act==='sort'){
+    placeSort = el.dataset.val;
+    try { localStorage.setItem('plan26_sort', placeSort); } catch(_) {}
+    el.parentElement.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed', b===el));
+    refreshPlaceList(); return;
+  }
+  if (act==='loc'){ selectPlace(el.dataset.place, false); return; }
   if (act==='tab'){
     tab = el.dataset.val;
     try { localStorage.setItem('plan26_tab', tab); } catch(_) {}
