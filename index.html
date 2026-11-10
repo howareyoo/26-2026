@@ -243,10 +243,13 @@ a.main:active{opacity:.6}
 .place.has-img{border-top:none;padding-top:8px}
 .mapcard{padding:6px}
 #map{height:280px;border-radius:13px;overflow:hidden;background:var(--fill)}
-.mpin{width:14px;height:14px;border-radius:50%;background:var(--accent);border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);cursor:pointer;transition:transform .15s}
-.mpin.on{transform:scale(1.45);background:var(--red)}
+.mpin{position:relative;width:14px;height:14px;border-radius:50%;background:var(--accent);border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);cursor:pointer}
+.mpin span{position:absolute;top:calc(100% + 3px);left:50%;transform:translateX(-50%);white-space:nowrap;
+  font-size:11px;font-weight:600;line-height:1.3;color:#1d1d1f;background:rgba(255,255,255,.94);padding:1px 6px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.mpin.on{background:var(--red);box-shadow:0 0 0 5px rgba(255,59,48,.25),0 1px 4px rgba(0,0,0,.35)}
+.mpin.on span{background:#1d1d1f;color:#fff}
+#map.far .mpin:not(.on) span{display:none}
 .mpin.stay{width:auto;height:auto;padding:3px 5px;border-radius:10px;background:#fff;font-size:1rem;line-height:1;cursor:default}
-.mlabel{background:#1d1d1f;color:#fff;font-size:.78rem;font-weight:600;padding:5px 9px;border-radius:8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.25)}
 .place .pd{font-size:.8rem;color:var(--secondary);margin-top:3px;font-variant-numeric:tabular-nums}
 .place .pc{font-size:.75rem;font-weight:500;color:var(--secondary);margin-left:2px}
 .place.flash{animation:flash 1.2s ease}
@@ -528,7 +531,7 @@ function drawResult(){
 /* ================= 지도 ================= */
 let placeSort = (()=>{ try { return localStorage.getItem('plan26_sort') || 'cat'; } catch(_) { return 'cat'; } })();
 const GEO = {};          // 주소 → {lat, lng} | null
-let STAY_GEO = null, MAP = null, MAP_PINS = {}, MAP_LABEL = null, kakaoReady = null;
+let STAY_GEO = null, MAP = null, MAP_PINS = {}, kakaoReady = null;
 const useMap = () => !!CONFIG.KAKAO_KEY;
 
 function loadKakao(){
@@ -581,32 +584,32 @@ async function initMap(){
 
   const center = STAY_GEO || Object.values(GEO).find(Boolean) || {lat:37.5776, lng:126.9715};
   MAP = new kakao.maps.Map(box, {center:new kakao.maps.LatLng(center.lat, center.lng), level:4});
-  MAP_PINS = {}; MAP_LABEL = null;
+  MAP_PINS = {};
   const bounds = new kakao.maps.LatLngBounds();
   const pin = (g, html, cls, onClick)=>{
     const el = document.createElement('div'); el.className = cls; el.innerHTML = html;
     if (onClick) el.addEventListener('click', onClick);
-    new kakao.maps.CustomOverlay({map:MAP, position:new kakao.maps.LatLng(g.lat, g.lng), content:el, yAnchor:.5, xAnchor:.5});
+    const ov = new kakao.maps.CustomOverlay({map:MAP, position:new kakao.maps.LatLng(g.lat, g.lng), content:el, yAnchor:.5, xAnchor:.5, zIndex:1});
     bounds.extend(new kakao.maps.LatLng(g.lat, g.lng));
-    return el;
+    return {el, ov};
   };
   if (STAY_GEO) pin(STAY_GEO, '🏠', 'mpin stay');
   (DATA.places||[]).forEach(p=>{
     const g = GEO[p.addr]; if (!g) return;
-    MAP_PINS[p.name] = pin(g, '', 'mpin', ()=>selectPlace(p.name, true));
+    MAP_PINS[p.name] = pin(g, `<span>${esc(p.name)}</span>`, 'mpin', ()=>selectPlace(p.name, true));
   });
-  if (!bounds.isEmpty()) MAP.setBounds(bounds, 40, 30, 40, 30);
+  if (!bounds.isEmpty()) MAP.setBounds(bounds, 50, 40, 50, 40);
+  // 많이 축소하면 이름 숨김 (선택한 곳은 계속 보임)
+  const far = ()=> box.classList.toggle('far', MAP.getLevel() > 5);
+  kakao.maps.event.addListener(MAP, 'zoom_changed', far); far();
   refreshPlaceList();
 }
 
 function selectPlace(name, fromMap){
   const p = DATA.places.find(x=>x.name===name), g = p && GEO[p.addr];
   if (!MAP || !g) return;
-  Object.values(MAP_PINS).forEach(el=>el.classList.remove('on'));
-  if (MAP_PINS[name]) MAP_PINS[name].classList.add('on');
-  if (MAP_LABEL) MAP_LABEL.setMap(null);
-  const el = document.createElement('div'); el.className = 'mlabel'; el.textContent = name;
-  MAP_LABEL = new kakao.maps.CustomOverlay({map:MAP, position:new kakao.maps.LatLng(g.lat, g.lng), content:el, yAnchor:1.9});
+  Object.values(MAP_PINS).forEach(x=>{ x.el.classList.remove('on'); x.ov.setZIndex(1); });
+  if (MAP_PINS[name]){ MAP_PINS[name].el.classList.add('on'); MAP_PINS[name].ov.setZIndex(10); }
   MAP.panTo(new kakao.maps.LatLng(g.lat, g.lng));
   if (fromMap){
     const row = [...document.querySelectorAll('#placeList .place')].find(r=>r.dataset.name===name);
