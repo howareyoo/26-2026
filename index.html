@@ -238,6 +238,31 @@ details.card[open] summary::after{content:"–"}
 .place .go{font-size:.8rem;font-weight:600;color:var(--accent);margin-left:4px}
 .place .pw{font-size:.8rem;color:var(--secondary);margin-top:4px}
 a.main:active{opacity:.6}
+.pimg{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;margin-top:14px;background:var(--fill)}
+.ptitle+.pimg{margin-top:10px}
+.place.has-img{border-top:none;padding-top:8px}
+.rhead{display:flex;justify-content:space-between;align-items:flex-end;padding:3vh 0 4px}
+.rhead .k{font-size:.82rem;color:var(--secondary);font-weight:600}
+.rhead h2{margin-top:4px}
+.ref{all:unset;cursor:pointer;width:38px;height:38px;border-radius:50%;background:var(--card);display:grid;place-items:center;flex:none}
+.ref svg{width:19px;height:19px;fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ref:active{opacity:.5}
+.nav.tabbed{padding:6px 8px calc(6px + env(safe-area-inset-bottom));border-top:1px solid var(--sep)}
+.tabs{flex:1;display:grid;grid-template-columns:repeat(4,1fr)}
+.tab{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;color:var(--secondary);font-size:.68rem;font-weight:500;text-align:center}
+.tab svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tab[aria-selected="true"]{color:var(--accent)}
+.tab[aria-selected="true"] svg{fill:color-mix(in srgb, currentColor 18%, transparent)}
+.tab span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 4px}
+.tab:focus-visible,.ref:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+.top5{background:var(--fill);border-radius:12px;padding:6px 14px;margin:14px 0 6px}
+.t5{display:flex;align-items:center;gap:12px;padding:8px 0}
+.t5+.t5{border-top:1px solid var(--sep)}
+.t5 .rk{width:18px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--secondary)}
+.t5:first-child .rk{color:var(--accent)}
+.t5 .tn{flex:1;min-width:0;font-weight:600}
+.t5 .tn small{font-weight:500;color:var(--secondary);font-size:.8rem;margin-left:6px}
+.t5 .tc{font-size:.85rem;font-weight:600;font-variant-numeric:tabular-nums}
 .like{all:unset;cursor:pointer;flex:none;display:flex;align-items:center;gap:4px;padding:7px 11px;border-radius:999px;
   background:var(--fill);font-size:1rem;filter:grayscale(1);transition:filter .15s}
 .like span{font-size:.85rem;font-weight:600;font-variant-numeric:tabular-nums;min-width:.6em}
@@ -255,9 +280,9 @@ const CONFIG = {
   MEMBERS: 6,
   DEADLINE: '10월 22일',
   STAY: '서촌 사직로9길 · 경복궁 근처',
-  PICK_TITLE: 'ㅎㅈ 참고 리스트'      // 결과 맨 아래 가게 목록 카드 제목
+  PICK_TITLE: 'ㅎㅈ 업데이트',       // 첫 번째 탭 이름
+  CLOSED: true
 };
- 
 
 /* ================= 문항 ================= */
 const Q = {
@@ -302,7 +327,7 @@ const SUBS = {
 const blank = () => ({nickname:'', character:'', meet:'', lunch:[], day:[], cafe:'', free:'', rest:'',
   dinner:[], after:[], rounds:'', wake:'', breakfast:'', bye:'', cantEat:'', must:''});
 let A = blank();
-let view = 'intro', step = 0;
+let view = CONFIG.CLOSED ? 'result' : 'intro', step = 0;
 let DATA = {members:[], answers:[], match:null, places:[], likes:{}};
 const ME_KEY = 'plan26_me';
 function getMe(){ try { return JSON.parse(localStorage.getItem(ME_KEY)) || null; } catch(_) { return null; } }
@@ -419,6 +444,19 @@ function renderDone(){
 }
 
 /* ================= 결과 ================= */
+const TABS = [
+  {id:'places', label:()=>CONFIG.PICK_TITLE,
+   icon:'<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/>'},
+  {id:'plan', label:()=>'일정',
+   icon:'<rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M9 3v4M15 3v4"/>'},
+  {id:'chemi', label:()=>'케미',
+   icon:'<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>'},
+  {id:'talk', label:()=>'한마디',
+   icon:'<path d="M5 17.5V7a2.5 2.5 0 0 1 2.5-2.5h9A2.5 2.5 0 0 1 19 7v6a2.5 2.5 0 0 1-2.5 2.5H9z"/>'}
+];
+let tab = (()=>{ try { return localStorage.getItem('plan26_tab') || 'places'; } catch(_) { return 'places'; } })();
+if (!TABS.some(t=>t.id===tab)) tab = 'places';
+
 async function renderResult(){
   $app.innerHTML = `<p class="sub" style="padding-top:20vh;text-align:center">불러오는 중</p>`;
   setNav('');
@@ -427,30 +465,53 @@ async function renderResult(){
     $app.innerHTML = `<h2>결과</h2><p class="hint">불러오지 못함: ${esc(e.message)}</p>`;
     setNav(`<button class="btn primary" data-act="go-result">다시 시도</button>`); return;
   }
+  drawResult();
+}
+
+function drawResult(){
   const ans = DATA.answers, n = ans.length;
   const done = n >= CONFIG.MEMBERS;
   const avs = ans.map(a=>`<div class="av"><div class="c">${esc(a.character)}</div><div class="n">${esc(a.nickname)}</div></div>`).join('')
     + Array.from({length:Math.max(0, CONFIG.MEMBERS-n)}, ()=>`<div class="av empty"><div class="c">?</div><div class="n">대기</div></div>`).join('');
+  const t = TABS.find(x=>x.id===tab);
 
-  if (!n){
-    $app.innerHTML = `<h2>결과</h2><div class="count">0<span>/${CONFIG.MEMBERS}</span></div><p class="sub">아직 아무도 안 냈어요</p><div class="avatars">${avs}</div>`;
-    setNav(`<button class="btn primary" data-act="start">참여하기</button>`); return;
+  let body = '';
+  if (tab==='places'){
+    body = placesHTML() || `<div class="card"><p class="sub" style="margin:0">아직 올린 곳이 없어요</p></div>`;
+  } else if (tab==='plan'){
+    body = n ? `${done ? '' : `<div class="avatars" style="margin:14px 0">${avs}</div>`}
+      <div class="card">${timelineHTML(ans)}</div>
+      <p class="sub" style="text-align:center;margin-top:12px">동점은 ‘또는’으로 표시. 단톡에서 택1</p>`
+      : `<div class="card"><p class="sub" style="margin:0">아직 아무도 안 냈어요</p></div>`;
+  } else if (tab==='chemi'){
+    body = matchHTML(n);
+  } else {
+    body = `${wishesHTML(ans) || '<div class="card"><p class="sub" style="margin:0">남긴 말이 없어요</p></div>'}
+      ${n ? `<details class="card"><summary>칸별 득표</summary>
+        ${Object.keys(Q).map(k=>`<div class="q-sec"><h4>${Q[k].label}</h4>${barsHTML(k, ans)}</div>`).join('')}
+      </details>` : ''}`;
   }
 
   $app.innerHTML = `
-    <div class="result-top"><div class="k">${done ? '최종 집계' : '중간 집계'} · ${n}/${CONFIG.MEMBERS}명</div>
-      <h2 style="margin-top:6px">1등끼리 조립한 일정</h2></div>
-    ${done ? '' : `<div class="avatars" style="margin:14px 0">${avs}</div>`}
-    <div class="card">${timelineHTML(ans)}</div>
-    ${matchHTML(n)}
-    ${wishesHTML(ans)}
-    <details class="card"><summary>칸별 득표</summary>
-      ${Object.keys(Q).map(k=>`<div class="q-sec"><h4>${Q[k].label}</h4>${barsHTML(k, ans)}</div>`).join('')}
-    </details>
-    ${placesHTML()}
-    <p class="sub" style="text-align:center;margin-top:16px">동점은 ‘또는’으로 표시. 단톡에서 택1</p>`;
-  setNav(`<button class="btn text" data-act="start">${A.nickname?'수정':'참여'}</button>
-          <button class="btn primary" data-act="go-result">새로고침</button>`);
+    <div class="rhead">
+      <div><div class="k">26 · ${done ? '최종 집계' : '중간 집계'} · ${n}/${CONFIG.MEMBERS}명</div><h2>${esc(t.label())}</h2></div>
+      <button class="ref" data-act="go-result" aria-label="새로고침">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg></button>
+    </div>
+    ${body}
+    ${CONFIG.CLOSED ? '' : `<button class="btn text" style="display:block;margin:20px auto 0" data-act="start">${A.nickname?'내 답 수정':'참여하기'}</button>`}`;
+
+  $navIn.innerHTML = `<div class="tabs" role="tablist">${TABS.map(x=>`
+    <button class="tab" role="tab" data-act="tab" data-val="${x.id}" aria-selected="${x.id===tab}">
+      <svg viewBox="0 0 24 24" aria-hidden="true">${x.icon}</svg><span>${esc(x.label())}</span></button>`).join('')}</div>`;
+  $nav.hidden = false; $nav.classList.add('tabbed');
+  window.scrollTo(0,0);
+}
+
+function imgSrc(u){
+  // 구글 드라이브 공유 링크 → 바로 보이는 이미지 주소로
+  const m = u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]+)/);
+  return m ? `https://drive.google.com/thumbnail?id=${m[1]}&sz=w1200` : u;
 }
 
 function tally(k, ans){
@@ -576,11 +637,34 @@ function placesHTML(){
   const cats = [];
   ps.forEach(p=>{ if (!cats.includes(p.cat)) cats.push(p.cat); });
   const cnt = p => (DATA.likes[p.name]||[]).length;
-  return `<div class="card" id="places"><h3>${esc(CONFIG.PICK_TITLE)}</h3><p class="sub">일단 검색 해봄. 가고 싶으면 👍 더 추가 될 예정</p>
+  return `<div class="card" id="places"><p class="sub" style="margin:0">참고용. 끌리면 👍</p>
+    <div id="likeTop">${likeTopHTML()}</div>
     ${cats.map(c=>`<div class="ptitle">${esc(c)}</div>
       ${ps.map((p,i)=>({p,i})).filter(x=>x.p.cat===c).sort((x,y)=>cnt(y.p)-cnt(x.p) || x.i-y.i).map(({p})=>placeRow(p)).join('')}`).join('')}
     <div class="hint" id="likeHint" style="margin:8px 0 0"></div>
   </div>`;
+}
+
+function replaceRow(rowEl, place){
+  const prev = rowEl.previousElementSibling;
+  if (prev && prev.classList.contains('pimg')) prev.remove();
+  rowEl.outerHTML = placeRow(DATA.places.find(p=>p.name===place));
+}
+
+function likeTopHTML(){
+  const ranked = (DATA.places||[])
+    .map((p,i)=>({p, i, n:(DATA.likes[p.name]||[]).length}))
+    .filter(x=>x.n>0)
+    .sort((a,b)=>b.n-a.n || a.i-b.i)
+    .slice(0,5);
+  if (!ranked.length) return '';
+  let rank = 0, prev = null;
+  return `<div class="top5">${ranked.map((x,k)=>{
+      if (x.n!==prev){ rank = k+1; prev = x.n; }
+      return `<div class="t5"><span class="rk">${rank}</span>
+        <span class="tn">${esc(x.p.name)}<small>${esc(x.p.cat)}</small></span>
+        <span class="tc">👍 ${x.n}</span></div>`;
+    }).join('')}</div>`;
 }
 
 function placeRow(p){
@@ -590,7 +674,8 @@ function placeRow(p){
   const inner = `<div class="pn">${esc(p.name)}${p.link?' <span class="go">지도 ›</span>':''}</div>
     ${p.memo?`<div class="pm">${esc(p.memo)}</div>`:''}
     ${who.length?`<div class="pw">${who.map(n=>`${esc(chars[n]||'')} ${esc(n)}`).join(' · ')}</div>`:''}`;
-  return `<div class="place">
+  const pic = p.img ? `<img class="pimg" src="${esc(imgSrc(p.img))}" alt="${esc(p.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : '';
+  return `${pic}<div class="place${p.img?' has-img':''}">
     ${p.link ? `<a class="main" href="${esc(p.link)}" target="_blank" rel="noopener">${inner}</a>` : `<div class="main">${inner}</div>`}
     <button class="like" data-act="like" data-place="${esc(p.name)}" aria-pressed="${!!mine}" aria-label="좋아요">👍<span>${who.length||''}</span></button>
   </div>`;
@@ -614,7 +699,7 @@ function stepOk(){
   if (s.who) return !!(A.nickname.trim() && A.character);
   return s.keys.every(k => Q[k].type==='multi' ? A[k].length>0 : !!A[k]);
 }
-function setNav(html){ $navIn.innerHTML = html; $nav.hidden = !html; }
+function setNav(html){ $navIn.innerHTML = html; $nav.hidden = !html; $nav.classList.remove('tabbed'); }
 function esc(s){ return String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function refreshNext(){
   const b = $navIn.querySelector('[data-act="next"]'); if (b) b.disabled = !stepOk();
@@ -680,6 +765,11 @@ document.addEventListener('click', async e=>{
     }
     refreshNext(); return;
   }
+  if (act==='tab'){
+    tab = el.dataset.val;
+    try { localStorage.setItem('plan26_tab', tab); } catch(_) {}
+    drawResult(); return;
+  }
   if (act==='split'){
     split = el.dataset.val;
     el.parentElement.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed', b===el));
@@ -692,7 +782,7 @@ document.addEventListener('click', async e=>{
     const before = (DATA.likes[place]||[]).slice();
     const on = !before.includes(ME.nickname);
     DATA.likes[place] = on ? before.concat(ME.nickname) : before.filter(n=>n!==ME.nickname);
-    el.closest('.place').outerHTML = placeRow(DATA.places.find(p=>p.name===place));
+    replaceRow(el.closest('.place'), place);
     try {
       if (demo) await new Promise(r=>setTimeout(r,150));
       else {
@@ -707,7 +797,8 @@ document.addEventListener('click', async e=>{
       hint.textContent = '저장 실패. 다시 눌러줘';
     }
     const row = [...document.querySelectorAll('#places .like')].find(b=>b.dataset.place===place);
-    if (row) row.closest('.place').outerHTML = placeRow(DATA.places.find(p=>p.name===place));
+    if (row) replaceRow(row.closest('.place'), place);
+    const top = document.getElementById('likeTop'); if (top) top.innerHTML = likeTopHTML();
     return;
   }
 });
