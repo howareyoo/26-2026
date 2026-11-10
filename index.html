@@ -599,9 +599,13 @@ function loadWeather(){
     const lat = 37.5780, lng = 126.9700;   // 서촌
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}`
       + `&current=temperature_2m,apparent_temperature,weather_code`
-      + `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max`
-      + `&timezone=Asia%2FSeoul&forecast_days=16`;
-    wxLoading = fetch(url).then(r=>r.json()).then(j=>{ if (!j.daily) throw new Error('응답 이상'); WX = j; })
+      + `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum`
+      + `&models=kma_seamless&timezone=Asia%2FSeoul&forecast_days=10`;   // 기상청(KMA) 모델
+    const fallback = url.replace('&models=kma_seamless', '').replace('forecast_days=10', 'forecast_days=16');
+    const get = u => fetch(u).then(r=>r.json()).then(j=>{ if (!j.daily || j.error || j.current?.temperature_2m==null) throw new Error('응답 이상'); return j; });
+    wxLoading = get(url).then(j=>{ j._src = '기상청 모델'; return j; })
+      .catch(()=> get(fallback).then(j=>{ j._src = 'Open-Meteo'; return j; }))
+      .then(j=>{ WX = j; })
       .catch(e=>{ WX_ERR = '날씨를 못 불러왔어요'; wxLoading = null; });
   }
   wxLoading.then(()=>{ const b = document.getElementById('weather'); if (b) b.innerHTML = weatherHTML(); });
@@ -615,17 +619,19 @@ function weatherHTML(){
   const pick = days.length ? days : d.time.slice(0, 2);   // 여행 날짜가 예보 범위 밖이면 오늘·내일
   const dow = ['일','월','화','수','목','금','토'];
   const label = t => { const [y,m,dd] = t.split('-').map(Number); return `${m}/${dd} (${dow[new Date(Date.UTC(y,m-1,dd)).getUTCDay()]})`; };
-  return `<div class="wtop"><span class="wt">서촌 날씨</span><span class="wsrc">Open-Meteo</span></div>
+  return `<div class="wtop"><span class="wt">서촌 날씨</span><span class="wsrc">${esc(WX._src || '')}</span></div>
     <div class="wnow"><span class="wic">${ic}</span>
       <div><div class="wtemp">${Math.round(c.temperature_2m)}°</div>
       <div class="wdesc">${txt} · 체감 ${Math.round(c.apparent_temperature)}°</div></div></div>
     <div class="wdays">${pick.map(t=>{
       const i = d.time.indexOf(t), [di, dt] = wx(d.weather_code[i]);
+      if (d.temperature_2m_max[i]==null) return `<div class="wday"><div class="wdl">${label(t)}</div><div class="wdt" style="margin-top:10px">아직 예보 없음</div></div>`;
       const rain = d.precipitation_probability_max ? d.precipitation_probability_max[i] : null;
+      const mm = d.precipitation_sum ? d.precipitation_sum[i] : null;
       return `<div class="wday"><div class="wdl">${days.length ? '여행 ' : ''}${label(t)}</div>
         <div class="wdi">${di}</div><div class="wdt">${dt}</div>
         <div class="wdr"><b>${Math.round(d.temperature_2m_max[i])}°</b> / ${Math.round(d.temperature_2m_min[i])}°</div>
-        ${rain!=null ? `<div class="wdp">☔ ${rain}%</div>` : ''}</div>`;
+        ${rain!=null ? `<div class="wdp">☔ ${rain}%</div>` : mm!=null ? `<div class="wdp">${mm>0 ? `💧 ${Math.round(mm*10)/10}mm` : '비 소식 없음'}</div>` : ''}</div>`;
     }).join('')}</div>`;
 }
 
